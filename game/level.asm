@@ -23,11 +23,11 @@ LVL_FILE_SIZE           = LVL_FILE_LINE_LEN*LVL_FILE_NUM_LINES
 
 ; Game objects
 OBJ_BOX_ON_TARGET           = 5
-OBJ_TARGET                  = 4     ; '#'
-OBJ_PLAYER                  = 3     ; '@'
-OBJ_BOX                     = 2     ; '+'
-OBJ_WALL                    = 1     ; '*'
-OBJ_FLOOR                   = 0     ; ' '
+OBJ_TARGET                  = 4     
+OBJ_PLAYER                  = 3     
+OBJ_BOX                     = 2     
+OBJ_WALL                    = 1     
+OBJ_FLOOR                   = 0     
 OBJ_INVALID                 = -1
 
 ; Symbols in LVL files
