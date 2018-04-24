@@ -22,7 +22,7 @@ start:
     mov ax, @data
     mov ds,ax
 
-    ; Code goes here
+    call PlaySokoban
 
 exit:
     mov ah, 4ch

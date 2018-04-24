@@ -30,3 +30,25 @@ CODESEG
     include "game/level.asm"
     include "game/welcome.asm"
 
+;------------------------------------------------------------------------
+; PlaySokoban: The main game loop
+; 
+; Input:
+;     call PlaySokoban
+; 
+; Output: None 
+;------------------------------------------------------------------------
+PROC PlaySokoban
+    push bp
+    mov bp,sp
+    pusha
+ 
+
+
+ 
+@@end:
+    popa
+    mov sp,bp
+    pop bp
+    ret 
+ENDP PlaySokoban
