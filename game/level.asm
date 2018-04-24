@@ -87,7 +87,7 @@ PROC ReadLevelFile
     ;}
 
 
-    mov si, offset lvlFilePath
+    mov si, lvlFilePath
     m_fsize si ds
 
     cmp ax, LVL_FILE_SIZE
