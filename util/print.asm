@@ -8,20 +8,29 @@ LOCALS @@
 CODESEG
 ;----------------------------------------------------------
 ; Prints a char to the screen
-; Input: DL
+; Input: 
+;   push char
+;   call PrintChar
 ;----------------------------------------------------------
 PROC PrintChar
+    push bp
+    mov bp,sp
+
     push ax
     mov ah, 02h
+    mov dx, [word bp+4]
     int 21h
     pop ax
+
+    mov sp,bp
+    pop bp
     ret
 ENDP PrintChar
 ;----------------------------------------------------------
 ; Prints a char to the screen + New line
-; Input: DL
 ;----------------------------------------------------------
-MACRO PrintCharNewLine
+MACRO PrintCharNewLine char
+    push char
     call PrintChar
     call PrintNewLine
 ENDM
@@ -48,9 +57,9 @@ PROC PrintSpace
 ENDP PrintSpace
 ;----------------------------------------------------------
 ; Prints a string to the screen
-; Input: DS:DX pointer to string ending in "$"
-; push offset
-; call PrintSre
+; Input: 
+;   push offset string ending in "$"
+;   call PrintSre
 ;----------------------------------------------------------
 PROC PrintStr 
     push bp
@@ -67,37 +76,13 @@ PROC PrintStr
     ret 2
 ENDP PrintStr
 ;----------------------------------------------------------
-; Prints a NULL terminated string to the screen
-; Input: DS:DX pointer to string ending in NULL
-; push offset
-; call PrintCStr
-;----------------------------------------------------------
-PROC PrintCStr
-    push bp
-    mov bp,sp
-    push si bx ax
-
-    push [word bp+4]
-    call Strlen
-    mov bx, ax                  ; store length
-    mov si, dx
-    add si, bx
-    mov [BYTE si], '$'
-    mov ah, 09h
-    int 21h
-
-    mov [BYTE si], Null
-
-    pop ax bx si
-    mov sp,bp
-    pop bp
-    ret 2
-ENDP PrintCStr
-;----------------------------------------------------------
 ; Prints a string to the screen + New line
-; Input: DS:DX pointer to string ending in "$"
+; Input:
+;   push offset string ending in "$"
+;   call PrintStrNewLine
 ;----------------------------------------------------------
-MACRO PrintStrNewLine
+MACRO PrintStrNewLine ostr
+    push ostr
     call PrintStr
     call PrintNewLine
 ENDM

@@ -5,9 +5,14 @@
 ;===================================================================================================
 LOCALS @@
 
+; SCAN CODES
 KEY_S = 1F73h
 KEY_E = 1265h
 KEY_R = 1372h
+KEY_P = 1970h
+
+KEY_ENTER = 1C0Dh
+KEY_ESC = 011Bh
 
 KEY_DOWN = 5000h
 KEY_UP   = 4800h
@@ -41,37 +46,4 @@ PROC WaitForKeypress
     pop bp
     ret
 ENDP WaitForKeypress
-;------------------------------------------------------------------
-; Read keyboard _Key if pressed - non blocking
-;
-; returns:
-; ZF = 0 if a _Key pressed (even Ctrl-Break)
-;	AX = 0 if no scan code is available
-;	AH = scan code
-;	AL = ASCII character or zero if special function _Key
-;------------------------------------------------------------------
-PROC GetKeyboardStatus
-    mov ah, 01h
-    int 16h  
-    ret
-ENDP GetKeyboardStatus
-;------------------------------------------------------------------
-; Consume the keyboard char
-;------------------------------------------------------------------
-PROC ConsumeKey
-    mov ah,0
-    int 16h
-    ret
-ENDP ConsumeKey
-;------------------------------------------------------------------
-; Get keyboard key if available
-;------------------------------------------------------------------
-PROC GetKeyboardKey
-    mov ax,0
-    call GetKeyboardStatus
-    jnz @@exit
-    call ConsumeKey
-@@exit:    
-    ret
-ENDP GetKeyboardKey
 
