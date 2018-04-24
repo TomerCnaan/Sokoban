@@ -21,7 +21,7 @@ DATASEG
     _imageWall           Bitmap       {ImagePath="images\\wall.bmp"}
     _imageBox            Bitmap       {ImagePath="images\\box.bmp"}
     _imageFloor          Bitmap       {ImagePath="images\\floor.bmp"}
-    _imageChar           Bitmap       {ImagePath="images\\char.bmp"}
+    _imageChar           Bitmap       {ImagePath="images\\player.bmp"}
     _imageTarget         Bitmap       {ImagePath="images\\target.bmp"}
     ; Game state
     _gameState           dw           STATE_WELCOME
