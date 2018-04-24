@@ -22,12 +22,13 @@ LVL_FILE_LINE_LEN       = SCRN_NUM_BOXES_WIDTH + 2              ; number of char
 LVL_FILE_SIZE           = LVL_FILE_LINE_LEN*LVL_FILE_NUM_LINES
 
 ; Game objects
-OBJ_BOX_ON_TARGET           = 5
-OBJ_TARGET                  = 4     
-OBJ_PLAYER                  = 3     
-OBJ_BOX                     = 2     
-OBJ_WALL                    = 1     
 OBJ_FLOOR                   = 0     
+OBJ_WALL                    = 1     
+OBJ_BOX                     = 2     
+OBJ_PLAYER                  = 3     
+OBJ_TARGET                  = 4     
+OBJ_BOX_ON_TARGET           = 5
+OBJ_EMPTY                   = 6
 OBJ_INVALID                 = -1
 
 ; Symbols in LVL files
@@ -36,6 +37,7 @@ SYMBOL_PLAYER               = '@'
 SYMBOL_BOX                  = '+'
 SYMBOL_WALL                 = '*'
 SYMBOL_FLOOR                = ' '
+SYMBOL_EMPTY                = '&'
 
 ; Possible directions
 DIR_UP                  = 1
@@ -45,7 +47,16 @@ DIR_RIGHT               = 4
 DIR_INVALID             = 10
 
 DATASEG
+    ; Bitmaps
+    _imageBoxTarget      Bitmap       {ImagePath="images\\boxtrg.bmp"}
+    _imageWall           Bitmap       {ImagePath="images\\wall.bmp"}
+    _imageBox            Bitmap       {ImagePath="images\\box.bmp"}
+    _imageFloor          Bitmap       {ImagePath="images\\floor.bmp"}
+    _imageChar           Bitmap       {ImagePath="images\\player.bmp"}
+    _imageTarget         Bitmap       {ImagePath="images\\target.bmp"}
+    _imageEmpty          Bitmap       {ImagePath="images\\empty.bmp"}
 
+    ; LVL Files
     _fileLevel1      db          "lvl\\lvl1.dat",0
     _fileLevel2      db          "lvl\\lvl2.dat",0
 
@@ -192,7 +203,7 @@ PROC ParseLevelData
 
 @@player:
     cmp al,SYMBOL_PLAYER
-    jne @@space
+    jne @@floor
 
     mov [BYTE si], OBJ_PLAYER
     mov dx, curLine
@@ -200,8 +211,15 @@ PROC ParseLevelData
     mov [_currentCol], bx          ; col
     jmp @@cont
 
-@@space:
+@@floor:
+    cmp al,SYMBOL_FLOOR
+    jne @@empty
+
     mov [BYTE si], OBJ_FLOOR
+    jmp @@cont
+
+@@empty:
+    mov [BYTE si], OBJ_EMPTY
 @@cont:
     inc si
     inc di

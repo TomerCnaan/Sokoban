@@ -16,19 +16,24 @@ STATE_INST          = 6
 STATE_EXIT          = 10
 
 DATASEG
-    ; Bitmaps
-    _imageBoxTarget      Bitmap       {ImagePath="images\\boxtrg.bmp"}
-    _imageWall           Bitmap       {ImagePath="images\\wall.bmp"}
-    _imageBox            Bitmap       {ImagePath="images\\box.bmp"}
-    _imageFloor          Bitmap       {ImagePath="images\\floor.bmp"}
-    _imageChar           Bitmap       {ImagePath="images\\player.bmp"}
-    _imageTarget         Bitmap       {ImagePath="images\\target.bmp"}
     ; Game state
-    _gameState           dw           STATE_WELCOME
+    _gameState           dw           0
 
 CODESEG
+;------------------------------------------------------------------------
+; Sets the game state
+;------------------------------------------------------------------------
+MACRO set_state state
+    mov [_gameState], state
+ENDM
+
+;=====================================
     include "game/level.asm"
     include "game/welcome.asm"
+    ;include "game/results.asm"
+    ;include "game/instr.asm"
+;=====================================
+
 
 ;------------------------------------------------------------------------
 ; PlaySokoban: The main game loop
@@ -42,6 +47,8 @@ PROC PlaySokoban
     push bp
     mov bp,sp
     pusha
+
+    set_state STATE_WELCOME
  
 
 
