@@ -14,9 +14,9 @@ STACK 100h
 
     include "lib.inc" 
 DATASEG
-    include "game/play.asm"
 
 CODESEG
+    include "game/play.asm"
 
 start:
     mov ax, @data
