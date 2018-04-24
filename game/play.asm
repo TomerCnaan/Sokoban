@@ -17,14 +17,14 @@ STATE_EXIT          = 10
 
 DATASEG
     ; Bitmaps
-    ImageBoxTarget      Bitmap       {ImagePath="images\\boxtrg.bmp"}
-    ImageWall           Bitmap       {ImagePath="images\\wall.bmp"}
-    ImageBox            Bitmap       {ImagePath="images\\box.bmp"}
-    ImageFloor          Bitmap       {ImagePath="images\\floor.bmp"}
-    ImageChar           Bitmap       {ImagePath="images\\char.bmp"}
-    ImageTarget         Bitmap       {ImagePath="images\\target.bmp"}
+    _imageBoxTarget      Bitmap       {ImagePath="images\\boxtrg.bmp"}
+    _imageWall           Bitmap       {ImagePath="images\\wall.bmp"}
+    _imageBox            Bitmap       {ImagePath="images\\box.bmp"}
+    _imageFloor          Bitmap       {ImagePath="images\\floor.bmp"}
+    _imageChar           Bitmap       {ImagePath="images\\char.bmp"}
+    _imageTarget         Bitmap       {ImagePath="images\\target.bmp"}
     ; Game state
-    GameState           dw           STATE_WELCOME
+    _gameState           dw           STATE_WELCOME
 
 CODESEG
     include "game/level.asm"

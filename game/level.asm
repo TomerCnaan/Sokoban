@@ -39,16 +39,16 @@ DIR_INVALID             = 10
 
 DATASEG
 
-    fileLevel1      db          "lvl\\lvl1.dat",0
-    fileLevel2      db          "lvl\\lvl2.dat",0
+    _fileLevel1      db          "lvl\\lvl1.dat",0
+    _fileLevel2      db          "lvl\\lvl2.dat",0
 
-    levelLine       db          LVL_FILE_LINE_LEN dup(0)
-    levelScreen     db          SCRN_ARRAY_SIZE dup(0)
+    _levelLine       db          LVL_FILE_LINE_LEN dup(0)
+    _screenArray     db          SCRN_ARRAY_SIZE dup(0)
 
-    ErrLoadLevel    db          "Error loading level file","$"
-    currentRow      dw          0
-    currentCol      dw          0
-    numTargets      dw          0
+    _errLoadLevel    db          "Error loading level file","$"
+    _currentRow      dw          0
+    _currentCol      dw          0
+    _numTargets      dw          0
 
 
 CODESEG
@@ -58,9 +58,9 @@ CODESEG
 ;
 ;------------------------------------------------------------------------
 MACRO init_level X1, X2
-    mov [currentCol],0
-    mov [currentRow],0
-    mov [numTargets],0
+    mov [_currentCol],0
+    mov [_currentRow],0
+    mov [_numTargets],0
 ENDM
 ;------------------------------------------------------------------------
 ; ReadLevelFile: 
@@ -86,7 +86,6 @@ PROC ReadLevelFile
     lvlFilePath        equ        [word bp+4]
     ;}
 
-
     mov si, lvlFilePath
     m_fsize si ds
 
@@ -100,7 +99,7 @@ PROC ReadLevelFile
     mov di, 0           ; current line
 @@rd:    
     ; read single line, including new line (0A,0D) chars at the end
-    mov si, offset levelLine
+    mov si, offset _levelLine
     m_fread LVL_FILE_LINE_LEN, si, ds
 
     push di
@@ -124,7 +123,7 @@ PROC ReadLevelFile
     ret 2
 ENDP ReadLevelFile
 ;------------------------------------------------------------------------
-; ParseLevelData: parsing the data in levelLine into the array levelScreen
+; ParseLevelData: parsing the data in levelLine into the array screenArray
 ; 
 ; Input:
 ;     push  current_line
@@ -147,9 +146,9 @@ PROC ParseLevelData
     curLine        equ        [word bp+4]
     ;}
 
-    ; si = levelScreen + (curLine * SCRN_BOX_WIDTH)
+    ; si = screenArray + (curLine * SCRN_BOX_WIDTH)
     ; points to the array address of the current row 
-    mov si, offset levelScreen
+    mov si, offset _screenArray
     mov ax, curLine
     mov bx, SCRN_NUM_BOXES_WIDTH
     mul bl
@@ -159,7 +158,7 @@ PROC ParseLevelData
     xor bx,bx                   ; col index
     xor ax,ax
     mov cx, SCRN_NUM_BOXES_WIDTH
-    mov di, offset levelLine
+    mov di, offset _levelLine
 @@parse:
     mov al,[BYTE di]
     cmp al, '*'
@@ -181,7 +180,7 @@ PROC ParseLevelData
     jne @@player
 
     mov [BYTE si], OBJ_TARGET
-    inc [numTargets]             ; count targets
+    inc [_numTargets]             ; count targets
     jmp @@cont
 
 @@player:
@@ -190,8 +189,8 @@ PROC ParseLevelData
 
     mov [BYTE si], OBJ_PLAYER
     mov dx, curLine
-    mov [currentRow], dx          ; row
-    mov [currentCol], bx          ; col
+    mov [_currentRow], dx          ; row
+    mov [_currentCol], bx          ; col
     jmp @@cont
 
 @@space:
