@@ -30,6 +30,13 @@ OBJ_WALL                    = 1     ; '*'
 OBJ_FLOOR                   = 0     ; ' '
 OBJ_INVALID                 = -1
 
+; Symbols in LVL files
+SYMBOL_TARGET               = '#'
+SYMBOL_PLAYER               = '@'
+SYMBOL_BOX                  = '+'
+SYMBOL_WALL                 = '*'
+SYMBOL_FLOOR                = ' '
+
 ; Possible directions
 DIR_UP                  = 1
 DIR_DOWN                = 2
@@ -161,7 +168,7 @@ PROC ParseLevelData
     mov di, offset _levelLine
 @@parse:
     mov al,[BYTE di]
-    cmp al, '*'
+    cmp al, SYMBOL_WALL
     jne @@box
 
     ; Found an *
@@ -169,14 +176,14 @@ PROC ParseLevelData
     jmp @@cont
 
 @@box:
-    cmp al,'+'
+    cmp al,SYMBOL_BOX
     jne @@target
 
     mov [BYTE si], OBJ_BOX
     jmp @@cont
 
 @@target:
-    cmp al,'#'
+    cmp al,SYMBOL_TARGET
     jne @@player
 
     mov [BYTE si], OBJ_TARGET
@@ -184,7 +191,7 @@ PROC ParseLevelData
     jmp @@cont
 
 @@player:
-    cmp al,'@'
+    cmp al,SYMBOL_PLAYER
     jne @@space
 
     mov [BYTE si], OBJ_PLAYER

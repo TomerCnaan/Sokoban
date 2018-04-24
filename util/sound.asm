@@ -11,7 +11,7 @@ CODESEG
 ;
 ; grm_Beep (freq)
 ;----------------------------------------------------------------------
-MACRO utm_Beep freq
+MACRO start_beep freq
     push freq
     call Beep
 ENDM    
@@ -20,7 +20,7 @@ ENDM
 ;
 ; grm_StopBeep()
 ;----------------------------------------------------------------------
-MACRO utm_StopBeep
+MACRO stop_beep
     call StopBeep
 ENDM
 

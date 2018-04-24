@@ -17,7 +17,7 @@ BMP_PATH_LENGTH   	 	 = 40
 DATASEG
 	; The Bitmap struct
 	struc Bitmap
-		FileHandle	dw ?
+		FileHandle	dw 0
 		Header 	    db BMP_HEADER_SIZE dup(0)
 		Palette 	db BMP_PALETTE_SIZE dup (0)
 		Width		dw 0
