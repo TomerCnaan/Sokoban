@@ -36,7 +36,7 @@ ENDM
 
 
 ;------------------------------------------------------------------------
-; PlaySokoban: The main game loop
+; PlaySokoban: The main game loop - a state machine
 ; 
 ; Input:
 ;     call PlaySokoban

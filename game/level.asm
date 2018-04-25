@@ -62,14 +62,19 @@ DATASEG
     _fileLevel1      db          "lvl\\lvl1.dat",0
     _fileLevel2      db          "lvl\\lvl2.dat",0
 
+    ; buffer for reading LVL files
     _levelLine       db          LVL_FILE_LINE_LEN dup(0)
+    ; 2D array representing screen objects
     _screenArray     db          SCRN_ARRAY_SIZE dup(0)
 
-    _errLoadLevel    db          "Error loading level file","$"
+    ; player coordinates
     _currentRow      dw          0
     _currentCol      dw          0
+    ; target count
     _numTargets      dw          0
 
+    ; Strings
+    _errLoadLevel    db          "Error loading level file","$"
 
 CODESEG
 
