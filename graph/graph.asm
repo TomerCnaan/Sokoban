@@ -24,7 +24,8 @@ DATASEG
 		Height		dw 0
 		ImagePath   db BMP_PATH_LENGTH+1 dup(0)
 		Loaded		dw 0
-	ENDS Bitmap
+        PaletteSize dw 0
+ENDS Bitmap
 	
 CODESEG
 ;------------------------------------------------------------------------

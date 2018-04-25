@@ -50,8 +50,6 @@ PROC PlaySokoban
 
     set_state STATE_WELCOME
  
-
-
  
 @@end:
     popa
