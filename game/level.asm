@@ -9,6 +9,8 @@ LOCALS @@
 SCRN_BOX_WIDTH          = 16
 SCRN_BOX_HEIGHT         = 16
 ; Game area
+SCRN_DRAW_AREA_TOP_X    = 0
+SCRN_DRAW_AREA_TOP_Y    = 0
 SCRN_DRAW_AREA_WIDTH    = 320
 SCRN_DRAW_AREA_HEIGHT   = 176
 ; Number of boxes in each row and col
@@ -18,7 +20,7 @@ SCRN_NUM_BOXES_HEIGHT   = SCRN_DRAW_AREA_HEIGHT/SCRN_BOX_HEIGHT
 SCRN_ARRAY_SIZE         = SCRN_NUM_BOXES_WIDTH * SCRN_NUM_BOXES_HEIGHT
 ; LVL file sizes
 LVL_FILE_NUM_LINES      = SCRN_NUM_BOXES_HEIGHT                 ; numberof lines in a lvl file
-LVL_FILE_LINE_LEN       = SCRN_NUM_BOXES_WIDTH + 2              ; number of chars in a lvl line
+LVL_FILE_LINE_LEN       = SCRN_NUM_BOXES_WIDTH + 2              ; number of chars in a lvl line (2 for \r\n)
 LVL_FILE_SIZE           = LVL_FILE_LINE_LEN*LVL_FILE_NUM_LINES
 
 ; Game objects
@@ -52,7 +54,7 @@ DATASEG
     _imageWall           Bitmap       {ImagePath="images\\wall.bmp"}
     _imageBox            Bitmap       {ImagePath="images\\box.bmp"}
     _imageFloor          Bitmap       {ImagePath="images\\floor.bmp"}
-    _imageChar           Bitmap       {ImagePath="images\\player.bmp"}
+    _imagePlayer         Bitmap       {ImagePath="images\\player.bmp"}
     _imageTarget         Bitmap       {ImagePath="images\\target.bmp"}
     _imageEmpty          Bitmap       {ImagePath="images\\empty.bmp"}
 
