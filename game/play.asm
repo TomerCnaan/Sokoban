@@ -49,13 +49,6 @@ PROC PlaySokoban
     pusha
 
     set_state STATE_WELCOME
- 
-    call DoBg
-    call dummy
-
-    call WaitForKeypress
-    gr_set_video_mode_txt
-    
 @@end:
     popa
     mov sp,bp
