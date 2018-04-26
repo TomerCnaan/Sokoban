@@ -48,8 +48,13 @@ PROC PlaySokoban
     mov bp,sp
     pusha
 
-    set_state STATE_WELCOME
+    set_state STATE_WELCOME    
+
+    ; here
+
 @@end:
+    gr_set_video_mode_txt
+
     popa
     mov sp,bp
     pop bp
