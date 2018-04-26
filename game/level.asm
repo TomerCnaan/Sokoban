@@ -7,7 +7,7 @@ LOCALS @@
 
 ; Box size
 SCRN_BOX_WIDTH          = 32
-SCRN_BOX_HEIGHT         = 32
+SCRN_BOX_HEIGHT         = SCRN_BOX_WIDTH
 ; Game area
 SCRN_DRAW_AREA_TOP_X    = 32
 SCRN_DRAW_AREA_TOP_Y    = 0
@@ -22,6 +22,11 @@ SCRN_ARRAY_SIZE         = SCRN_NUM_BOXES_WIDTH * SCRN_NUM_BOXES_HEIGHT
 LVL_FILE_NUM_LINES      = SCRN_NUM_BOXES_HEIGHT                 ; numberof lines in a lvl file
 LVL_FILE_LINE_LEN       = SCRN_NUM_BOXES_WIDTH + 2              ; number of chars in a lvl line (2 for \r\n)
 LVL_FILE_SIZE           = LVL_FILE_LINE_LEN*LVL_FILE_NUM_LINES
+; Animation
+ANIM_GAP                = 1
+ANIM_GAP_NEG            = -1*ANIM_GAP
+ANIM_DELAY_MS           = 10
+ANIM_STEPS              = SCRN_BOX_WIDTH / ANIM_GAP
 
 ; Game objects
 OBJ_FLOOR                   = 0     
@@ -87,6 +92,54 @@ MACRO init_level X1, X2
     mov [_currentRow],0
     mov [_numTargets],0
 ENDM
+;------------------------------------------------------------------------
+; init_level: 
+;
+;------------------------------------------------------------------------
+MACRO set_player_position row, col
+    mov [_currentCol],col
+    mov [_currentRow],row
+ENDM
+;------------------------------------------------------------------------
+; Converts (row,col) to actual screen coordinates (x,y) of the box top 
+; left corner
+; 
+; Output: ax = x coordinate, bx = y coordinate
+;------------------------------------------------------------------------
+MACRO get_box_coord row, col
+    push cx
+    mov ax, row
+    mov cx, SCRN_BOX_HEIGHT
+    mul cl
+    mov bx, ax                  
+    add bx, SCRN_DRAW_AREA_TOP_Y    ; bx = y coord
+
+    mov ax, col
+    mov cx, SCRN_BOX_WIDTH
+    mul cl                      
+    add ax, SCRN_DRAW_AREA_TOP_X    ; ax = x coord
+    pop cx
+ENDM get_box_coord
+;------------------------------------------------------------------------
+; Converts actual screen coordinates (x,y) of the box top left corner
+; to (row,col)
+; 
+; Output: ax = col, bx = row
+;------------------------------------------------------------------------
+MACRO get_coord_box x,y
+    push cx
+    mov ax, y
+    sub ax, SCRN_DRAW_AREA_TOP_Y
+    mov cx, SCRN_BOX_HEIGHT
+    div cl
+    mov bx, ax                      ;  row
+
+    mov ax, x
+    sub ax, SCRN_DRAW_AREA_TOP_X
+    mov cx, SCRN_BOX_WIDTH
+    div cl                          ; ax is the col
+    pop cx
+ENDM get_box_coord
 ;------------------------------------------------------------------------
 ; ReadLevelFile: 
 ; 
