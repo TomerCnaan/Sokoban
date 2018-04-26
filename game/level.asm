@@ -6,13 +6,13 @@
 LOCALS @@
 
 ; Box size
-SCRN_BOX_WIDTH          = 16
-SCRN_BOX_HEIGHT         = 16
+SCRN_BOX_WIDTH          = 32
+SCRN_BOX_HEIGHT         = 32
 ; Game area
-SCRN_DRAW_AREA_TOP_X    = 0
+SCRN_DRAW_AREA_TOP_X    = 32
 SCRN_DRAW_AREA_TOP_Y    = 0
-SCRN_DRAW_AREA_WIDTH    = 320
-SCRN_DRAW_AREA_HEIGHT   = 176
+SCRN_DRAW_AREA_WIDTH    = 8*SCRN_BOX_WIDTH
+SCRN_DRAW_AREA_HEIGHT   = 6*SCRN_BOX_HEIGHT
 ; Number of boxes in each row and col
 SCRN_NUM_BOXES_WIDTH    = SCRN_DRAW_AREA_WIDTH/SCRN_BOX_WIDTH
 SCRN_NUM_BOXES_HEIGHT   = SCRN_DRAW_AREA_HEIGHT/SCRN_BOX_HEIGHT
@@ -239,3 +239,181 @@ PROC ParseLevelData
     pop bp
     ret 2
 ENDP ParseLevelData
+;------------------------------------------------------------------------
+; dummy: 
+; 
+; Input:
+;     push  X1 
+;     push  X2
+;     call dummy
+; 
+; Output: 
+;     AX - 
+; 
+; Affected Registers: 
+; Limitations: 
+;------------------------------------------------------------------------
+PROC DoBg
+    push bp
+    mov bp,sp
+    ;sub sp,2            ;<- set value
+    pusha
+ 
+    gr_set_video_mode_vga
+ 
+
+    mov si, offset _imageFloor
+    mov bx, SCRN_DRAW_AREA_TOP_X
+    mov dx, SCRN_DRAW_AREA_TOP_Y
+    mov di, SCRN_DRAW_AREA_TOP_X
+    add di, SCRN_DRAW_AREA_WIDTH
+    push di
+
+@@paintH:        
+    pop di
+    mov cx, SCRN_NUM_BOXES_WIDTH
+@@paintRow:    
+    Display_BMP si, bx, dx
+    add bx, SCRN_BOX_WIDTH
+    cmp bx, di
+    jae @@nextRow
+
+    loop @@paintRow
+@@nextRow:    
+    mov bx, SCRN_DRAW_AREA_TOP_X
+    add dx, SCRN_BOX_HEIGHT
+
+    push di
+    mov di, SCRN_DRAW_AREA_TOP_Y
+    add di, SCRN_DRAW_AREA_HEIGHT
+    cmp dx, di
+    jb @@paintH
+    pop di
+
+@@end:
+    popa
+    mov sp,bp
+    pop bp
+    ret ;4               ;<- set value
+ENDP DoBg
+;------------------------------------------------------------------------
+; dummy: 
+; 
+; Input:
+;     push  X1 
+;     push  X2
+;     call dummy
+; 
+; Output: 
+;     AX - 
+; 
+; Affected Registers: 
+; Limitations: 
+;------------------------------------------------------------------------
+PROC dummy
+    push bp
+    mov bp,sp
+    ;sub sp,2            ;<- set value
+    pusha
+ 
+    mov si, offset _imagePlayer
+    mov bx, SCRN_DRAW_AREA_TOP_X + SCRN_BOX_WIDTH
+    mov dx, SCRN_DRAW_AREA_TOP_Y + SCRN_BOX_HEIGHT
+
+    Display_BMP si, bx, dx
+
+    push bx
+    push dx
+    push DIR_RIGHT
+    call MovePlayer
+
+
+@@end:
+    popa
+    mov sp,bp
+    pop bp
+    ret ;4               ;<- set value
+ENDP dummy
+;------------------------------------------------------------------------
+; ProcName: 
+; 
+; Input:
+;     push  X1 
+;     push  X2
+;     call ProcName
+; 
+; Output: 
+;     AX - 
+; 
+; Affected Registers: 
+; Limitations: 
+;------------------------------------------------------------------------
+PROC ProcName
+    push bp
+    mov bp,sp
+    ;sub sp,2            ;<- set value
+    pusha
+ 
+    ; now the stack is
+    ; bp-2 => 
+    ; bp+0 => old base pointer
+    ; bp+2 => return address
+    ; bp+4 => 
+    ; bp+6 => 
+    ; saved registers
+ 
+    ;{
+    varName_         equ        [word bp-2]
+ 
+    parName2_        equ        [word bp+4]
+    parName1_        equ        [word bp+6]
+    ;}
+ 
+@@end:
+    popa
+    mov sp,bp
+    pop bp
+    ret ;4               ;<- set value
+ENDP ProcName
+;------------------------------------------------------------------------
+; MovePlayer: 
+; 
+; Input:
+;     push  X1 
+;     push  X2
+;     call MovePlayer
+; 
+; Output: 
+;     AX - 
+; 
+; Affected Registers: 
+; Limitations: 
+;------------------------------------------------------------------------
+PROC MovePlayer
+    push bp
+    mov bp,sp
+    ;sub sp,2            ;<- set value
+    pusha
+ 
+    ; now the stack is
+    ; bp-2 => 
+    ; bp+0 => old base pointer
+    ; bp+2 => return address
+    ; bp+4 => direction
+    ; bp+6 => current Y
+    ; bp+8 => current X
+    ; saved registers
+ 
+    ;{
+    varName_         equ        [word bp-2]
+ 
+    parName2_        equ        [word bp+4]
+    parName1_        equ        [word bp+6]
+    ;}
+ 
+@@end:
+    popa
+    mov sp,bp
+    pop bp
+    ret ;4               ;<- set value
+ENDP MovePlayer
