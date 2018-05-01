@@ -130,61 +130,7 @@ PROC fread
     pop bp
 	ret 6
 ENDP fread
-;------------------------------------------------------------------------
-; Seek in file
-; 
-; Input:
-;     whence - SEEK_SET, SEEK_CUR, SEEK_END
-;     offset_high - high order of offset
-;     offset_low - low order of offset
-;
-;------------------------------------------------------------------------
-PROC fseek
-    push bp
-	mov bp,sp
-    pusha
- 
-    ; now the stack is
-    ; bp+0 => old base pointer
-    ; bp+2 => return address
-    ; bp+4 => offset low
-    ; bp+6 => offset high
-    ; bp+8 => whence
-    ; saved registers
- 
-    ;{
-    whence        equ        [word bp+8]
-    offsetHi      equ        [word bp+6]
-    offsetLow     equ        [word bp+4]
-    ;}
 
-    cmp [cs:_fHandle], 0
-    je @@end                ; file not open
-
-    mov ax, whence
-
-    cmp whence, SEEK_END
-    je @@s_end
-
-    mov cx, offsetHi
-    mov dx, offsetLow
-    jmp @@do_seek
-
-@@s_end:
-    xor cx, cx
-    xor dx, dx
-
-@@do_seek:
-    mov bx, [cs:_fHandle]
-    mov ah, 42h
-    int 21h
-
-@@end:
-    popa
-    mov sp,bp
-    pop bp
-    ret 6
-ENDP fseek
 ;------------------------------------------------------------------------
 ; Gets the size of a file
 ; 

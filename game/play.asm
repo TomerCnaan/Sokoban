@@ -18,6 +18,7 @@ STATE_EXIT          = 10
 DATASEG
     ; Game state
     _gameState           dw           0
+    _welcomeImage        Bitmap       {ImagePath="images\\boxtrg.bmp"}
 
 CODESEG
 ;------------------------------------------------------------------------
@@ -50,8 +51,14 @@ PROC PlaySokoban
 
     set_state STATE_WELCOME    
 
-    ; here
+    gr_set_video_mode_vga
 
+    mov si, offset _welcomeImage
+    Display_BMP si, 50,50
+
+    call WaitForKeypress
+    
+    
 @@end:
     gr_set_video_mode_txt
 
