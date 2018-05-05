@@ -6,13 +6,13 @@
 LOCALS @@
 
 ; Box size
-SCRN_BOX_WIDTH          = 32
+SCRN_BOX_WIDTH          = 16
 SCRN_BOX_HEIGHT         = SCRN_BOX_WIDTH
 ; Game area
 SCRN_DRAW_AREA_TOP_X    = 32
 SCRN_DRAW_AREA_TOP_Y    = 0
-SCRN_DRAW_AREA_WIDTH    = 8*SCRN_BOX_WIDTH
-SCRN_DRAW_AREA_HEIGHT   = 6*SCRN_BOX_HEIGHT
+SCRN_DRAW_AREA_WIDTH    = 20*SCRN_BOX_WIDTH
+SCRN_DRAW_AREA_HEIGHT   = 11*SCRN_BOX_HEIGHT
 ; Number of boxes in each row and col
 SCRN_NUM_BOXES_WIDTH    = SCRN_DRAW_AREA_WIDTH/SCRN_BOX_WIDTH
 SCRN_NUM_BOXES_HEIGHT   = SCRN_DRAW_AREA_HEIGHT/SCRN_BOX_HEIGHT
@@ -52,6 +52,8 @@ DIR_DOWN                = 2
 DIR_LEFT                = 3
 DIR_RIGHT               = 4
 DIR_INVALID             = 10
+
+MAX_LEVELS              = 3
 
 DATASEG
     ; Bitmaps
@@ -140,6 +142,46 @@ MACRO get_coord_box x,y
     div cl                          ; ax is the col
     pop cx
 ENDM get_box_coord
+
+;------------------------------------------------------------------------
+; Description: handles levels
+; 
+; Input:
+;     call HandleLevel
+; 
+; Output: 
+;     AX - 
+; 
+; Affected Registers: 
+; Limitations: 
+;------------------------------------------------------------------------
+PROC HandleLevel
+    push bp
+    mov bp,sp
+    ;sub sp,2            ;<- set value
+    pusha
+ 
+    ; now the stack is
+    ; bp-2 => 
+    ; bp+0 => old base pointer
+    ; bp+2 => return address
+    ; bp+4 => 
+    ; bp+6 => 
+    ; saved registers
+ 
+    ;{
+    varName_         equ        [word bp-2]
+ 
+    parName2_        equ        [word bp+4]
+    parName1_        equ        [word bp+6]
+    ;}
+ 
+@@end:
+    popa
+    mov sp,bp
+    pop bp
+    ret ;4               ;<- set value
+ENDP HandleLevel
 ;------------------------------------------------------------------------
 ; ReadLevelFile: 
 ; 

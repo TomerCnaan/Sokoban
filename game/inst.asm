@@ -5,26 +5,26 @@
 LOCALS @@
 
 DATASEG
- _imageWelcome     Bitmap       {ImagePath="images\\sokoban.bmp"}
+ _imageInstructions     Bitmap       {ImagePath="images\\inst.bmp"}
 
 CODESEG
 ;------------------------------------------------------------------------
 ; Description: Hendles welcome screen
 ; 
 ; Input:
-;     call HandleWelcome
+;     call HandleInstructions
 ; 
 ; Output: none
 ; 
 ;------------------------------------------------------------------------
-PROC HandleWelcome
+PROC HandleInstructions
     push bp
     mov bp,sp
     pusha
  
     gr_set_video_mode_vga
 
-    mov si, offset _imageWelcome
+    mov si, offset _imageInstructions
     Display_BMP si, 0 , 0
     call WaitForKeypress
 @@CheckKey:
@@ -34,19 +34,13 @@ PROC HandleWelcome
     jmp @@end
 @@checkP:
     cmp ax, KEY_P
-    jne @@checkI
+    jne @@CheckKey
     set_state STATE_LEVEL
     jmp @@end
-@@checkI:
-    cmp ax, KEY_I
-    jne @@CheckKey
-    set_state STATE_INST
-    jmp @@end
-
 @@end:
     gr_set_video_mode_txt
     popa
     mov sp,bp
     pop bp
     ret 
-ENDP HandleWelcome
+ENDP HandleInstructions
