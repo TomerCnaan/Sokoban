@@ -9,8 +9,8 @@ LOCALS @@
 SCRN_BOX_WIDTH          = 16
 SCRN_BOX_HEIGHT         = SCRN_BOX_WIDTH
 ; Game area
-SCRN_DRAW_AREA_TOP_X    = 32
-SCRN_DRAW_AREA_TOP_Y    = 0
+SCRN_DRAW_AREA_TOP_X    = 0
+SCRN_DRAW_AREA_TOP_Y    = 16
 SCRN_DRAW_AREA_WIDTH    = 20*SCRN_BOX_WIDTH
 SCRN_DRAW_AREA_HEIGHT   = 11*SCRN_BOX_HEIGHT
 ; Number of boxes in each row and col
@@ -54,6 +54,7 @@ DIR_RIGHT               = 4
 DIR_INVALID             = 10
 
 MAX_LEVELS              = 3
+LEVEL_FILE_OFFSET       = 8
 
 DATASEG
     ; Bitmaps
@@ -66,8 +67,8 @@ DATASEG
     _imageEmpty          Bitmap       {ImagePath="images\\empty.bmp"}
 
     ; LVL Files
-    _fileLevel1      db          "lvl\\lvl1.dat",0
-    _fileLevel2      db          "lvl\\lvl2.dat",0
+    _fileLevel       db          "lvl\\lvl1.dat",0
+    ;_fileLevel2      db          "lvl\\lvl2.dat",0
 
     ; buffer for reading LVL files
     _levelLine       db          LVL_FILE_LINE_LEN dup(0)
@@ -145,7 +146,7 @@ ENDM get_box_coord
 
 ;------------------------------------------------------------------------
 ; Description: handles levels
-; 
+;  
 ; Input:
 ;     call HandleLevel
 ;------------------------------------------------------------------------
@@ -154,10 +155,18 @@ PROC HandleLevel
     mov bp,sp
     pusha
  
-    push offset _fileLevel1
+    mov si, offset _fileLevel
+    add si, LEVEL_FILE_OFFSET
+    mov ax, [_currentLevel]
+    add ax, '0'
+    mov [BYTE si], al
+
+    push offset _fileLevel
     call ReadLevelFile
     push offset _screenArray
     call PrintLevelToScreen
+
+    call WaitForKeypress
 
 @@end:
     popa
@@ -344,32 +353,69 @@ PROC PrintLevelToScreen
     ; saved registers
  
     ;{
-    column                   equ        [word bp-4]
-    row                      equ        [word bp-2]
+    x                        equ        [word bp-4]
+    y                        equ        [word bp-2]
     offsetScreenArray        equ        [word bp+4]
     ;}
     gr_set_video_mode_vga
+
     mov ax, 0
     mov bx, 0
-    mov column, 0 
-    mov row, 0   
+    mov x, SCRN_DRAW_AREA_TOP_X 
+    mov y, SCRN_DRAW_AREA_TOP_Y
+
     mov si, offsetScreenArray
     mov cx, SCRN_ARRAY_SIZE
 @@PrintToScreenFromArray:
-    cmp [BYTE si + 1], OBJ_WALL
-    jne @@CheckWall
-    get_box_coord row, column
+    cmp [BYTE si], OBJ_WALL
+    jne @@CheckFloor
+    ; wall    
     mov dx, offset _imageWall 
-    Display_BMP dx, bx, ax
-@@CheckWall:
-    cmp column, SCRN_NUM_BOXES_WIDTH
-    je @@NewLine
-    inc column
+    jmp @@CheckXY
+@@CheckFloor:
+    cmp [BYTE si], OBJ_FLOOR
+    jne @@CheckBox
+    ; Floor    
+    mov dx, offset _imageFloor 
+    jmp @@CheckXY
+@@CheckBox:
+    cmp [BYTE si], OBJ_BOX
+    jne @@CheckPlayer
+    ; Box    
+    mov dx, offset _imageBox
+    jmp @@CheckXY
+@@CheckPlayer:
+    cmp [BYTE si], OBJ_PLAYER
+    jne @@CheckTarget
+    ; Player    
+    mov dx, offset _imagePlayer
+    jmp @@CheckXY
+@@CheckTarget:
+    cmp [BYTE si], OBJ_TARGET
+    jne @@CheckBoxOnTarget
+    ; Target    
+    mov dx, offset _imageTarget
+    jmp @@CheckXY
+@@CheckBoxOnTarget:
+    cmp [BYTE si], OBJ_BOX_ON_TARGET
+    jne @@CheckEmpty
+    ; Box On The Target   
+    mov dx, offset _imageBoxTarget
+    jmp @@CheckXY
+@@CheckEmpty:
+    ; Empty  
+    mov dx, offset _imageEmpty
+    jmp @@CheckXY
+@@CheckXY:
+    Display_BMP dx, x, y
+    add x, SCRN_BOX_WIDTH
+    cmp x, SCRN_DRAW_AREA_WIDTH + SCRN_DRAW_AREA_TOP_X
+    jae @@NewLine
     inc si
     jmp @@LoopEnd
 @@NewLine:
-    mov column, 0
-    inc row
+    mov x, SCRN_DRAW_AREA_TOP_X
+    add y, SCRN_BOX_HEIGHT
     inc si
 @@LoopEnd:
     loop @@PrintToScreenFromArray
@@ -378,5 +424,5 @@ PROC PrintLevelToScreen
     add sp, 4
     mov sp,bp
     pop bp
-    ret 
+    ret 2
 ENDP PrintLevelToScreen
