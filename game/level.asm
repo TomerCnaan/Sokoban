@@ -148,39 +148,22 @@ ENDM get_box_coord
 ; 
 ; Input:
 ;     call HandleLevel
-; 
-; Output: 
-;     AX - 
-; 
-; Affected Registers: 
-; Limitations: 
 ;------------------------------------------------------------------------
 PROC HandleLevel
     push bp
     mov bp,sp
-    ;sub sp,2            ;<- set value
     pusha
  
-    ; now the stack is
-    ; bp-2 => 
-    ; bp+0 => old base pointer
-    ; bp+2 => return address
-    ; bp+4 => 
-    ; bp+6 => 
-    ; saved registers
- 
-    ;{
-    varName_         equ        [word bp-2]
- 
-    parName2_        equ        [word bp+4]
-    parName1_        equ        [word bp+6]
-    ;}
- 
+    push offset _fileLevel1
+    call ReadLevelFile
+    push offset _screenArray
+    call PrintLevelToScreen
+
 @@end:
     popa
     mov sp,bp
     pop bp
-    ret ;4               ;<- set value
+    ret 
 ENDP HandleLevel
 ;------------------------------------------------------------------------
 ; ReadLevelFile: 
@@ -334,3 +317,66 @@ PROC ParseLevelData
     pop bp
     ret 2
 ENDP ParseLevelData
+
+;------------------------------------------------------------------------
+; parses screen array and presents bmp pictures on the screen 
+; 
+; Input:
+;     push offset sfreenArray
+;     call PrintLevelToScreen
+; 
+; Output: 
+;     bmp pictures on the screen 
+; 
+;------------------------------------------------------------------------
+PROC PrintLevelToScreen
+    push bp
+    mov bp,sp
+    sub sp, 4
+    pusha
+ 
+     ; now the stack is
+     ;bp-4 => y coordinate
+     ;bp-2 => x coordinate
+    ; bp+0 => old base pointer
+    ; bp+2 => return address
+    ; bp+4 => offset screenArray
+    ; saved registers
+ 
+    ;{
+    column                   equ        [word bp-4]
+    row                      equ        [word bp-2]
+    offsetScreenArray        equ        [word bp+4]
+    ;}
+    gr_set_video_mode_vga
+    mov ax, 0
+    mov bx, 0
+    mov column, 0 
+    mov row, 0   
+    mov si, offsetScreenArray
+    mov cx, SCRN_ARRAY_SIZE
+@@PrintToScreenFromArray:
+    cmp [BYTE si + 1], OBJ_WALL
+    jne @@CheckWall
+    get_box_coord row, column
+    mov dx, offset _imageWall 
+    Display_BMP dx, bx, ax
+@@CheckWall:
+    cmp column, SCRN_NUM_BOXES_WIDTH
+    je @@NewLine
+    inc column
+    inc si
+    jmp @@LoopEnd
+@@NewLine:
+    mov column, 0
+    inc row
+    inc si
+@@LoopEnd:
+    loop @@PrintToScreenFromArray
+@@end:
+    popa
+    add sp, 4
+    mov sp,bp
+    pop bp
+    ret 
+ENDP PrintLevelToScreen
