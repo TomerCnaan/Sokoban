@@ -143,6 +143,32 @@ MACRO get_coord_box x,y
     div cl                          ; ax is the col
     pop cx
 ENDM get_box_coord
+;------------------------------------------------------------------------
+; sets box value in array. gets(row, col), offset array 
+;
+;------------------------------------------------------------------------
+MACRO set_box_value row,col, arrOffset
+   mov ax, row
+   mov bx, SCRN_NUM_BOXES_WIDTH
+   mul bx
+   add ax, col
+   mov si, arrOffset
+   add si, ax
+   mov [si], OBJ_BOX
+ENDM
+;------------------------------------------------------------------------
+; gets box value in array. gets(row, col) , offset array
+;AX = array value in (row,col)
+;------------------------------------------------------------------------
+MACRO set_box_value row,col, arrOffset
+   mov ax, row
+   mov bx, SCRN_NUM_BOXES_WIDTH
+   mul bx
+   add ax, col
+   mov si, arrOffset
+   add si, ax
+   mov ax, [si]
+ENDM
 
 ;------------------------------------------------------------------------
 ; Description: handles levels
@@ -165,6 +191,7 @@ PROC HandleLevel
     call ReadLevelFile
     push offset _screenArray
     call PrintLevelToScreen
+    call HandleKey
 
     call WaitForKeypress
 
@@ -344,7 +371,7 @@ PROC PrintLevelToScreen
     sub sp, 4
     pusha
  
-     ; now the stack is
+     ;now the stack is
      ;bp-4 => y coordinate
      ;bp-2 => x coordinate
     ; bp+0 => old base pointer
@@ -426,3 +453,71 @@ PROC PrintLevelToScreen
     pop bp
     ret 2
 ENDP PrintLevelToScreen
+
+;------------------------------------------------------------------------
+; ProcName: HandleKey
+; 
+; Input:
+;     push  X1 
+;     push  X2
+;     call HandleKey
+; 
+; Output: 
+;     AX - 
+; 
+; Affected Registers: 
+; Limitations: 
+;------------------------------------------------------------------------
+PROC HandleKey
+    push bp
+    mov bp,sp
+    pusha
+@@WaitForKey:
+    call WaitForKeypress
+    cmp ax, KEY_DOWN
+    jne @@CheckKeyUp
+    push DIR_DOWN
+    push [_currentRow]
+    push [_currentCol]
+    ;call HandleArrow
+    jmp @@WaitForKey
+@@CheckKeyUp:
+    cmp ax, KEY_UP
+    jne @@CheckKeyLeft
+    push DIR_UP
+    push [_currentRow]
+    push [_currentCol]
+   ; call HandleArrow
+   jmp @@WaitForKey
+@@CheckKeyLeft:
+    cmp ax, KEY_LEFT
+    jne @@CheckKeyRight
+    push DIR_LEFT
+    push [_currentRow]
+    push [_currentCol]
+    ;call HandleArrow
+    jmp @@WaitForKey
+@@CheckKeyRight:
+    cmp ax, KEY_RIGHT
+    jne @@CheckKeyR
+    push DIR_RIGHT
+    push [_currentRow]
+    push [_currentCol]
+    ;call HandleArrow
+    jmp @@WaitForKey
+@@CheckKeyR:
+    cmp ax, KEY_R
+    jne @@CheckKeyEsc
+    set_state STATE_RESTART_LEVEL
+@@CheckKeyEsc:
+    cmp ax, KEY_ESC
+    jne @@WaitForKey
+    set_state STATE_EXIT
+jmp @@WaitForKey
+
+@@end:
+    popa
+    mov sp,bp
+    pop bp
+    ret 
+ENDP HandleKey
