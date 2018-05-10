@@ -61,6 +61,7 @@ PROC PlaySokoban
     pusha
 
     set_state STATE_WELCOME    
+    call SetKeyboardRate
 
 @@CheckState: 
     cmp [_gameState], STATE_WELCOME

@@ -144,30 +144,34 @@ MACRO get_coord_box x,y
     pop cx
 ENDM get_box_coord
 ;------------------------------------------------------------------------
-; sets box value in array. gets(row, col), offset array 
+; sets box value in array. gets(row, col) 
 ;
 ;------------------------------------------------------------------------
-MACRO set_box_value row,col, arrOffset
+MACRO set_box_value row,col
+   pusha
    mov ax, row
    mov bx, SCRN_NUM_BOXES_WIDTH
    mul bx
    add ax, col
-   mov si, arrOffset
+   mov si, offset _screenArray
    add si, ax
-   mov [si], OBJ_BOX
+   mov [byte si], OBJ_BOX
+   popa
 ENDM
 ;------------------------------------------------------------------------
-; gets box value in array. gets(row, col) , offset array
+; gets box value in array. gets(row, col) 
 ;AX = array value in (row,col)
 ;------------------------------------------------------------------------
-MACRO set_box_value row,col, arrOffset
+MACRO set_box_value row,col
+   push bx si
    mov ax, row
    mov bx, SCRN_NUM_BOXES_WIDTH
    mul bx
    add ax, col
-   mov si, arrOffset
+   mov si, offset _screenArray
    add si, ax
-   mov ax, [si]
+   mov ax, [byte si]
+   pop si bx
 ENDM
 
 ;------------------------------------------------------------------------
@@ -192,10 +196,13 @@ PROC HandleLevel
     push offset _screenArray
     call PrintLevelToScreen
     call HandleKey
+    cmp ax,TRUE
+    jne @@end
 
-    call WaitForKeypress
+    
 
 @@end:
+    gr_set_video_mode_txt
     popa
     mov sp,bp
     pop bp
@@ -458,9 +465,72 @@ ENDP PrintLevelToScreen
 ; ProcName: HandleKey
 ; 
 ; Input:
-;     push  X1 
-;     push  X2
 ;     call HandleKey
+; 
+; Output: 
+;     AX - TRUE / FALSE
+; 
+; Affected Registers: none 
+;------------------------------------------------------------------------
+PROC HandleKey
+    push bp
+    mov bp,sp
+    pusha
+
+    mov cx, TRUE
+@@WaitForKey:
+    call WaitForKeypress
+    cmp ax, KEY_DOWN
+    jne @@CheckKeyUp
+    ;push DIR_DOWN
+    ;call HandleArrow
+    jmp @@WaitForKey
+@@CheckKeyUp:
+    cmp ax, KEY_UP
+    jne @@CheckKeyLeft
+    ;push DIR_UP
+   ; call HandleArrow
+   jmp @@WaitForKey
+@@CheckKeyLeft:
+    cmp ax, KEY_LEFT
+    jne @@CheckKeyRight
+    ;push DIR_LEFT
+    ;call HandleArrow
+    jmp @@WaitForKey
+@@CheckKeyRight:
+    cmp ax, KEY_RIGHT
+    jne @@CheckKeyR
+    ;push DIR_RIGHT
+    ;call HandleArrow
+    jmp @@WaitForKey
+@@CheckKeyR:
+    cmp ax, KEY_R
+    jne @@CheckKeyEsc
+    set_state STATE_RESTART_LEVEL
+    mov cx, FALSE
+    jmp @@end
+@@CheckKeyEsc:
+    cmp ax, KEY_ESC
+    jne @@WaitForKey
+    set_state STATE_EXIT
+    mov cx, FALSE
+    jmp @@end
+jmp @@WaitForKey
+
+
+@@end:
+    mov ax, cx
+    popa
+    mov sp,bp
+    pop bp
+    ret 
+ENDP HandleKey
+;------------------------------------------------------------------------
+; Description: 
+; 
+; Input:
+;     push  Diraction
+;     call HandleArrow
 ; 
 ; Output: 
 ;     AX - 
@@ -468,56 +538,30 @@ ENDP PrintLevelToScreen
 ; Affected Registers: 
 ; Limitations: 
 ;------------------------------------------------------------------------
-PROC HandleKey
+PROC HandleArrow
     push bp
     mov bp,sp
+    ;sub sp,2            ;<- set value
     pusha
-@@WaitForKey:
-    call WaitForKeypress
-    cmp ax, KEY_DOWN
-    jne @@CheckKeyUp
-    push DIR_DOWN
-    push [_currentRow]
-    push [_currentCol]
-    ;call HandleArrow
-    jmp @@WaitForKey
-@@CheckKeyUp:
-    cmp ax, KEY_UP
-    jne @@CheckKeyLeft
-    push DIR_UP
-    push [_currentRow]
-    push [_currentCol]
-   ; call HandleArrow
-   jmp @@WaitForKey
-@@CheckKeyLeft:
-    cmp ax, KEY_LEFT
-    jne @@CheckKeyRight
-    push DIR_LEFT
-    push [_currentRow]
-    push [_currentCol]
-    ;call HandleArrow
-    jmp @@WaitForKey
-@@CheckKeyRight:
-    cmp ax, KEY_RIGHT
-    jne @@CheckKeyR
-    push DIR_RIGHT
-    push [_currentRow]
-    push [_currentCol]
-    ;call HandleArrow
-    jmp @@WaitForKey
-@@CheckKeyR:
-    cmp ax, KEY_R
-    jne @@CheckKeyEsc
-    set_state STATE_RESTART_LEVEL
-@@CheckKeyEsc:
-    cmp ax, KEY_ESC
-    jne @@WaitForKey
-    set_state STATE_EXIT
-jmp @@WaitForKey
-
+ 
+    ; now the stack is
+    ; bp-2 => 
+    ; bp+0 => old base pointer
+    ; bp+2 => return address
+    ; bp+4 => 
+    ; bp+6 => 
+    ; saved registers
+ 
+    ;{
+    varName_         equ        [word bp-2]
+ 
+    parName2_        equ        [word bp+4]
+    parName1_        equ        [word bp+6]
+    ;}
+ 
 @@end:
     popa
     mov sp,bp
     pop bp
-    ret 
-ENDP HandleKey
+    ret ;4               ;<- set value
+ENDP HandleArrow
