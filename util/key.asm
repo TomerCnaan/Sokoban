@@ -44,4 +44,28 @@ PROC WaitForKeypress
     pop bp
     ret
 ENDP WaitForKeypress
+;------------------------------------------------------------------------
+; SetKeyboardRate: 
+; 
+; Input:
+;     call SetKeyboardRate
+; 
+; Output: None
+;------------------------------------------------------------------------
+PROC SetKeyboardRate
+    push bp
+    mov bp,sp
+    pusha
+ 
+    mov ah, 3
+    mov al, 5
+    mov bl, 3
+    mov bh, 01fh
+    int 16h
 
+@@end:
+    popa
+    mov sp,bp
+    pop bp
+    ret 
+ENDP SetKeyboardRate

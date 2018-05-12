@@ -33,6 +33,7 @@ OBJ_FLOOR                   = 0
 OBJ_WALL                    = 1     
 OBJ_BOX                     = 2     
 OBJ_PLAYER                  = 3     
+OBJ_PLAYER_ON_TARGET        = 7
 OBJ_TARGET                  = 4     
 OBJ_BOX_ON_TARGET           = 5
 OBJ_EMPTY                   = 6
@@ -63,6 +64,7 @@ DATASEG
     _imageBox            Bitmap       {ImagePath="images\\box.bmp"}
     _imageFloor          Bitmap       {ImagePath="images\\floor.bmp"}
     _imagePlayer         Bitmap       {ImagePath="images\\player.bmp"}
+    _imagePlayerTarget   Bitmap       {ImagePath="images\\plytrg.bmp"}
     _imageTarget         Bitmap       {ImagePath="images\\target.bmp"}
     _imageEmpty          Bitmap       {ImagePath="images\\empty.bmp"}
 
@@ -149,9 +151,11 @@ ENDM get_box_coord
 ;------------------------------------------------------------------------
 MACRO set_box_value row,col
    pusha
+   push col
    mov ax, row
    mov bx, SCRN_NUM_BOXES_WIDTH
    mul bx
+   pop col
    add ax, col
    mov si, offset _screenArray
    add si, ax
@@ -159,18 +163,20 @@ MACRO set_box_value row,col
    popa
 ENDM
 ;------------------------------------------------------------------------
-; gets box value in array. gets(row, col) 
+; returns  value in array in given (row, col) 
 ;AX = array value in (row,col)
 ;------------------------------------------------------------------------
-MACRO set_box_value row,col
+MACRO get_arr_value row,col
    push bx si
+   push col
    mov ax, row
    mov bx, SCRN_NUM_BOXES_WIDTH
    mul bx
+   pop col
    add ax, col
    mov si, offset _screenArray
    add si, ax
-   mov ax, [byte si]
+   mov al, [byte si]
    pop si bx
 ENDM
 
@@ -482,26 +488,26 @@ PROC HandleKey
     call WaitForKeypress
     cmp ax, KEY_DOWN
     jne @@CheckKeyUp
-    ;push DIR_DOWN
-    ;call HandleArrow
+    push DIR_DOWN
+    call HandleArrow
     jmp @@WaitForKey
 @@CheckKeyUp:
     cmp ax, KEY_UP
     jne @@CheckKeyLeft
-    ;push DIR_UP
-   ; call HandleArrow
+    push DIR_UP
+    call HandleArrow
    jmp @@WaitForKey
 @@CheckKeyLeft:
     cmp ax, KEY_LEFT
     jne @@CheckKeyRight
-    ;push DIR_LEFT
-    ;call HandleArrow
+    push DIR_LEFT
+    call HandleArrow
     jmp @@WaitForKey
 @@CheckKeyRight:
     cmp ax, KEY_RIGHT
     jne @@CheckKeyR
-    ;push DIR_RIGHT
-    ;call HandleArrow
+    push DIR_RIGHT
+    call HandleArrow
     jmp @@WaitForKey
 @@CheckKeyR:
     cmp ax, KEY_R
@@ -541,27 +547,488 @@ ENDP HandleKey
 PROC HandleArrow
     push bp
     mov bp,sp
-    ;sub sp,2            ;<- set value
+    pusha
+ 
+    ; now the stack is
+    ; bp+0 => old base pointer
+    ; bp+2 => return address
+    ; bp+4 => Diraction
+    ; saved registers
+ 
+    ;{
+    Direction        equ        [word bp+4]
+    ;}
+    push Direction
+    push 1 ;distance
+    call GetArrayValueDir
+    ; ax = value in distance 1
+
+@@IsDown:   ;player movement check
+    cmp Direction, DIR_DOWN
+    jne @@IsUp
+    
+    cmp ax, OBJ_FLOOR
+    jne @@CheckTarget
+    push DIR_DOWN
+    push FALSE
+    call MoveToTarget
+    jmp @@end
+@@CheckTarget:
+    cmp ax, OBJ_TARGET
+    jne @@CheckWall
+    push DIR_DOWN
+    push FALSE
+    call MoveToTarget
+    jmp @@end
+@@CheckWall:
+    cmp ax, OBJ_WALL
+    jne @@CheckBox
+    jmp @@end
+@@CheckBox:
+    cmp ax, OBJ_BOX
+    je @@CheckNextObj
+    cmp ax, OBJ_BOX_ON_TARGET
+@@CheckNextObj: ;Box movement check
+
+    push Direction
+    push 2 ;distance
+    call GetArrayValueDir
+    ; ax = value in distance 2
+
+    cmp ax, OBJ_FLOOR
+    jne @@CheckTargetAfterBox
+    push DIR_DOWN
+    push TRUE
+    call MoveToTarget
+    jmp @@end
+@@CheckTargetAfterBox:
+    cmp ax, OBJ_TARGET
+    jne @@CheckWallAfterBox
+    push DIR_DOWN
+    push TRUE
+    call MoveToTarget
+    jmp @@end
+@@CheckWallAfterBox:
+    cmp ax, OBJ_WALL
+    jne @@CheckBoxAfterBox
+    jmp @@end
+@@CheckBoxAfterBox:
+    cmp ax, OBJ_BOX
+    jne @@CheckBoxOnTargetAfterBox
+    jmp @@end
+@@CheckBoxOnTargetAfterBox:
+    cmp ax, OBJ_BOX_ON_TARGET
+    jmp @@end
+
+;----------------------------
+@@IsUp:
+    cmp Direction, DIR_UP
+    jne @@IsLeft
+
+    jmp @@end
+;---------------------------
+@@IsLeft:
+    cmp Direction, DIR_LEFT
+    jne @@Right
+
+    jmp @@end
+;---------------------------
+@@Right:
+
+;---------------------------
+   
+
+@@end:
+    popa
+    mov sp,bp
+    pop bp
+    ret 2
+ENDP HandleArrow
+;------------------------------------------------------------------------
+; Description: 
+; 
+; Input:
+;     push  direction
+;     push  distance
+;     call GetArrayValueDir
+; 
+; Output: 
+;     AX - Value in array 
+; 
+; Affected Registers: AX
+;------------------------------------------------------------------------
+PROC GetArrayValueDir
+    push bp
+    mov bp,sp
+    push cx dx
+ 
+    ; now the stack is
+    ; bp+0 => old base pointer
+    ; bp+2 => return address
+    ; bp+4 => Distance
+    ; bp+6 => Diraction
+    ; saved registers
+ 
+    ;{
+    Distance        equ        [word bp+4]
+    Dir             equ        [word bp+6]
+    ;}
+    
+    mov cx, [_currentRow]
+    mov dx, [_currentCol]
+@@IsDown:
+    cmp Dir, DIR_DOWN
+    jne @@IsUp
+    add cx, Distance
+    jmp @@Calc
+@@IsUp:
+    cmp Dir, DIR_UP
+    jne @@IsLeft
+    sub cx, Distance
+    jmp @@Calc
+@@IsLeft:
+    cmp Dir, DIR_LEFT
+    jne @@Right
+    sub dx, Distance
+    jmp @@Calc
+@@Right:
+    add dx, Distance
+@@Calc:
+    get_arr_value cx,dx
+@@end:
+    pop dx cx
+    mov sp,bp
+    pop bp
+    ret 4
+ENDP GetArrayValueDir
+;------------------------------------------------------------------------
+; Description: 
+; 
+; Input:
+;     push diraction
+;     push is pushing a box(true/false)
+;     call MoveToTarget
+; 
+; Output: 
+;     AX - 
+; 
+; Affected Registers: 
+; Limitations: 
+;------------------------------------------------------------------------
+PROC MoveToTarget
+    push bp
+    mov bp,sp
+    sub sp, 18
+    pusha
+    ;now the stack is
+    ; bp-18 => TargObj2
+    ; bp-16 => gap x
+    ; bp-14 => gap y
+    ; bp-12 => Target row
+    ; bp-10 => Target column
+    ; bp-8 => Target Obj
+    ; bp-6 => from Obj
+    ; bp-4 => y coordinate
+    ; bp-2 => x coordinate
+    ; bp+0 => old base pointer
+    ; bp+2 => return address
+    ; bp+4 => direction
+    ; bp+6 => is pushing a box
+    ; saved registers
+ 
+    ;{
+    TargObj2                 equ        [word bp-18]
+    GapX                     equ        [word bp-16]
+    GapY                     equ        [word bp-14]
+    TargetRow                equ        [word bp-12]
+    TargetColumn             equ        [word bp-10]
+    TargObj                  equ        [word bp-8]
+    FromObj                  equ        [word bp-6]
+    FromX                    equ        [word bp-4]
+    FromY                    equ        [word bp-2]
+    Dir                      equ        [word bp+6]
+    IsPushBox                equ        [word bp+4]
+   ;}
+    ; int
+    mov TargObj2, 0
+
+    mov ax, [_currentRow]
+    mov TargetRow, ax
+    
+    mov ax, [_currentCol]
+    mov TargetColumn, ax
+
+    get_arr_value [_currentRow], [_currentCol]
+    mov FromObj, ax
+
+@@IsDown:
+    cmp Dir, DIR_DOWN
+    jne @@IsUp
+    mov GapY, ANIM_GAP
+    mov GapX, 0
+    inc TargetRow
+    jmp @@calc
+@@IsUp:
+    cmp Dir, DIR_UP
+    jne @@IsLeft
+    mov GapY, ANIM_GAP_NEG
+    mov GapX, 0
+    dec TargetRow
+    jmp @@calc
+@@IsLeft:
+    cmp Dir, DIR_LEFT
+    jne @@Right
+    mov GapY, 0
+    mov GapX, ANIM_GAP_NEG
+    dec TargetColumn
+    jmp @@calc
+@@Right:
+    mov GapY, 0
+    mov GapX, ANIM_GAP
+    inc TargetColumn
+
+@@calc:
+    get_arr_value TargetRow, TargetColumn
+    mov TargObj, ax
+
+    ; Coord of src    
+    get_box_coord [_currentRow], [_currentCol]
+    mov FromX, ax
+    mov FromY, bx
+
+    cmp IsPushBox, TRUE         ; We are moving 3 objects
+    jne @@noPush
+    push Dir
+    push 2
+    call GetArrayValueDir
+    mov TargObj2, ax
+
+    ; Coord of target (when moving 3 objects)
+    get_box_coord TargetRow, TargetColumn
+    
+    jmp @@anim
+
+@@noPush:
+    mov ax, 0
+    mov bx, 0
+
+@@anim:
+    push FromX
+    push FromY
+    push GapX
+    push GapY
+    push FromObj
+    push TargObj
+    push IsPushBox
+    push TargObj2
+    push ax                 ; target x (3 objects)
+    push bx                 ; target y (3 objects)
+    call Animate
+
+
+@@end:
+    popa
+    mov sp,bp
+    pop bp
+    ret 4
+ENDP MoveToTarget
+
+;------------------------------------------------------------------------
+; Description: 
+; 
+; Input:
+;     push  x coor of the player 
+;     push  y coor of the player 
+;     push  number of pixels to move the player on x in each step
+;     push  number of pixels to move the player on y in each step
+;     push  object at the source (player / player on target) 
+;     push  object in distance 1 from the source(box, box on target, floor, target)
+;     push  true/false - are we pushing a box?
+;     push  object in distance 2 from the source(floor, target)
+;     push  x coor of the box/box on target
+;     push  y coor of the box/box on target
+;     call Animate
+;------------------------------------------------------------------------
+PROC Animate
+    push bp
+    mov bp,sp
+    sub sp, 8
     pusha
  
     ; now the stack is
     ; bp-2 => 
     ; bp+0 => old base pointer
     ; bp+2 => return address
-    ; bp+4 => 
-    ; bp+6 => 
+    ; bp+4 => FromX     
+    ; bp+6 => FromY     
+    ; bp+8 => GapX      
+    ; bp+10 =>GapY      
+    ; bp+12 =>FromObj   
+    ; bp+14 =>TargObj   
+    ; bp+16 =>IsPushBox 
+    ; bp+18 =>TargObj2  
+    ; bp+20 =>FromX2    
+    ; bp+22 =>FromY2    
     ; saved registers
  
     ;{
-    varName_         equ        [word bp-2]
- 
-    parName2_        equ        [word bp+4]
-    parName1_        equ        [word bp+6]
+    CurrentYTarget2 equ        [word bp-8]
+    CurrentXTarget2 equ        [word bp-6]
+    CurrentY        equ        [word bp-4]
+    CurrentX        equ        [word bp-2]
+    
+    FromX           equ        [word bp+22]
+    FromY           equ        [word bp+20]
+    GapX            equ        [word bp+18]
+    GapY            equ        [word bp+16]
+    FromObj         equ        [word bp+14]
+    TargObj         equ        [word bp+12]
+    IsPushBox       equ        [word bp+10]
+    TargObj2        equ        [word bp+8]
+    FromX2          equ        [word bp+6]
+    FromY2          equ        [word bp+4]
     ;}
- 
+    mov dx, FromX
+    mov CurrentX, dx
+    
+    mov dx, FromY
+    mov CurrentY, dx
+    
+    mov dx, FromX2
+    mov CurrentXTarget2, dx
+    
+    mov dx, FromY2
+    mov CurrentYTarget2, dx
+    ;---
+    cmp FromObj, OBJ_PLAYER
+    jne @@plrtrg
+
+    push OBJ_FLOOR
+    jmp @@convert
+@@plrtrg:
+    push OBJ_TARGET
+@@convert:
+    call ObjectToImage
+    mov di, ax          ;background image offset
+    
+    cmp TargObj, OBJ_TARGET
+    jne @@checkBoxTrg
+    push OBJ_PLAYER_ON_TARGET
+    jmp @@convert2
+@@checkBoxTrg:
+    cmp TargObj, OBJ_BOX_ON_TARGET
+    jne @@NotTarget
+    push OBJ_PLAYER_ON_TARGET
+    jmp @@convert2
+    
+@@NotTarget:
+    push OBJ_PLAYER
+
+@@convert2:
+    call ObjectToImage
+    mov si, ax          ;first target image offset
+
+    cmp IsPushBox, TRUE
+    jne @@notbox
+
+    ; determine the taregt object of the 3rd box
+    cmp TargObj2, OBJ_FLOOR
+    jne @@notFloor
+    push OBJ_BOX
+    jmp @@convert3
+@@notFloor:
+    push OBJ_BOX_ON_TARGET
+
+@@convert3:
+    call ObjectToImage
+    mov bx, ax          ;secend target to move
+
+@@notbox:
+
+
+    mov cx, SCRN_BOX_WIDTH ;width and height are the same
+@@Anim:
+    Display_BMP di, FromX, FromY
+
+    mov dx, GapX
+    add CurrentX, dx
+    mov dx, GapY
+    add CurrentY, dx
+    Display_BMP si, CurrentX, CurrentY
+
+    cmp IsPushBox, TRUE
+    jne @@loopEnd
+    mov dx, GapX
+    add CurrentXTarget2, dx
+    mov dx, GapY
+    add CurrentYTarget2, dx
+    Display_BMP bx, CurrentXTarget2, CurrentYTarget2
+@@loopEnd:
+    loop @@Anim
 @@end:
     popa
     mov sp,bp
     pop bp
-    ret ;4               ;<- set value
-ENDP HandleArrow
+    ret 20
+ENDP Animate
+;------------------------------------------------------------------------
+; Description: 
+; 
+; Input:
+;     push  obj
+;     call ObjectToImage
+; 
+; Output: 
+;     AX - offset to image
+; 
+; Affected Registers: 
+; Limitations: 
+;------------------------------------------------------------------------
+PROC ObjectToImage
+    push bp
+    mov bp,sp
+    push si
+ 
+    ; now the stack is
+    ; bp+0 => old base pointer
+    ; bp+2 => return address
+    ; bp+4 => 
+    ; saved registers
+ 
+    ;{
+    obj        equ        [word bp+4]
+    ;}
+
+    cmp obj, OBJ_FLOOR
+    jne @@CheckBox
+    mov si, offset _imageFloor 
+    jmp @@end
+@@CheckBox:
+    cmp obj, OBJ_BOX
+    jne @@CheckBoxOnTarget
+    mov si, offset _imageBox
+    jmp @@end
+@@CheckBoxOnTarget:
+    cmp obj, OBJ_BOX_ON_TARGET
+    jne @@CheckPlayer
+    mov si, offset _imageBoxTarget
+    jmp @@end
+@@CheckPlayer:
+    cmp obj, OBJ_PLAYER
+    jne @@CheckPlayerOnTarget
+    mov si, offset _imagePlayer
+    jmp @@end
+@@CheckPlayerOnTarget:
+    cmp obj, OBJ_PLAYER_ON_TARGET
+    jne @@CheckTarget
+    mov si, offset _imagePlayerTarget
+    jmp @@end
+@@CheckTarget:
+    mov si, offset _imageTarget
+@@end:
+    mov ax, si
+    pop si
+    mov sp,bp
+    pop bp
+    ret 2
+ENDP ObjectToImage
