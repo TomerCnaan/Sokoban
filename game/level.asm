@@ -532,17 +532,13 @@ jmp @@WaitForKey
     ret 
 ENDP HandleKey
 ;------------------------------------------------------------------------
-; Description: 
+; Description: handles arrow press
 ; 
 ; Input:
 ;     push  Diraction
 ;     call HandleArrow
 ; 
-; Output: 
-;     AX - 
-; 
-; Affected Registers: 
-; Limitations: 
+; Affected Registers: none 
 ;------------------------------------------------------------------------
 PROC HandleArrow
     push bp
@@ -625,15 +621,171 @@ PROC HandleArrow
     cmp Direction, DIR_UP
     jne @@IsLeft
 
+    cmp ax, OBJ_FLOOR
+    jne @@CheckTarget1
+    push DIR_UP
+    push FALSE
+    call MoveToTarget
+    jmp @@end
+@@CheckTarget1:
+    cmp ax, OBJ_TARGET
+    jne @@CheckWall1
+    push DIR_UP
+    push FALSE
+    call MoveToTarget
+    jmp @@end
+@@CheckWall1:
+    cmp ax, OBJ_WALL
+    jne @@CheckBox1
+    jmp @@end
+@@CheckBox1:
+    cmp ax, OBJ_BOX
+    je @@CheckNextObj1
+    cmp ax, OBJ_BOX_ON_TARGET
+@@CheckNextObj1: ;Box movement check
+
+    push Direction
+    push 2 ;distance
+    call GetArrayValueDir
+    ; ax = value in distance 2
+
+    cmp ax, OBJ_FLOOR
+    jne @@CheckTargetAfterBox1
+    push DIR_UP
+    push TRUE
+    call MoveToTarget
+    jmp @@end
+@@CheckTargetAfterBox1:
+    cmp ax, OBJ_TARGET
+    jne @@CheckWallAfterBox1
+    push DIR_UP
+    push TRUE
+    call MoveToTarget
+    jmp @@end
+@@CheckWallAfterBox1:
+    cmp ax, OBJ_WALL
+    jne @@CheckBoxAfterBox1
+    jmp @@end
+@@CheckBoxAfterBox1:
+    cmp ax, OBJ_BOX
+    jne @@CheckBoxOnTargetAfterBox1
+    jmp @@end
+@@CheckBoxOnTargetAfterBox1:
+    cmp ax, OBJ_BOX_ON_TARGET
+
     jmp @@end
 ;---------------------------
 @@IsLeft:
     cmp Direction, DIR_LEFT
     jne @@Right
 
+    cmp ax, OBJ_FLOOR
+    jne @@CheckTarget2
+    push DIR_LEFT
+    push FALSE
+    call MoveToTarget
+    jmp @@end
+@@CheckTarget2:
+    cmp ax, OBJ_TARGET
+    jne @@CheckWall2
+    push DIR_LEFT
+    push FALSE
+    call MoveToTarget
+    jmp @@end
+@@CheckWall2:
+    cmp ax, OBJ_WALL
+    jne @@CheckBox2
+    jmp @@end
+@@CheckBox2:
+    cmp ax, OBJ_BOX
+    je @@CheckNextObj2
+    cmp ax, OBJ_BOX_ON_TARGET
+@@CheckNextObj2: ;Box movement check
+
+    push Direction
+    push 2 ;distance
+    call GetArrayValueDir
+    ; ax = value in distance 2
+
+    cmp ax, OBJ_FLOOR
+    jne @@CheckTargetAfterBox2
+    push DIR_LEFT
+    push TRUE
+    call MoveToTarget
+    jmp @@end
+@@CheckTargetAfterBox2:
+    cmp ax, OBJ_TARGET
+    jne @@CheckWallAfterBox2
+    push DIR_LEFT
+    push TRUE
+    call MoveToTarget
+    jmp @@end
+@@CheckWallAfterBox2:
+    cmp ax, OBJ_WALL
+    jne @@CheckBoxAfterBox2
+    jmp @@end
+@@CheckBoxAfterBox2:
+    cmp ax, OBJ_BOX
+    jne @@CheckBoxOnTargetAfterBox2
+    jmp @@end
+@@CheckBoxOnTargetAfterBox2:
+    cmp ax, OBJ_BOX_ON_TARGET
+
     jmp @@end
 ;---------------------------
 @@Right:
+
+    cmp ax, OBJ_FLOOR
+    jne @@CheckTarget3
+    push DIR_RIGHT
+    push FALSE
+    call MoveToTarget
+    jmp @@end
+@@CheckTarget3:
+    cmp ax, OBJ_TARGET
+    jne @@CheckWall3
+    push DIR_RIGHT
+    push FALSE
+    call MoveToTarget
+    jmp @@end
+@@CheckWall3:
+    cmp ax, OBJ_WALL
+    jne @@CheckBox3
+    jmp @@end
+@@CheckBox3:
+    cmp ax, OBJ_BOX
+    je @@CheckNextObj3
+    cmp ax, OBJ_BOX_ON_TARGET
+@@CheckNextObj3: ;Box movement check
+
+    push Direction
+    push 2 ;distance
+    call GetArrayValueDir
+    ; ax = value in distance 2
+
+    cmp ax, OBJ_FLOOR
+    jne @@CheckTargetAfterBox3
+    push DIR_RIGHT
+    push TRUE
+    call MoveToTarget
+    jmp @@end
+@@CheckTargetAfterBox3:
+    cmp ax, OBJ_TARGET
+    jne @@CheckWallAfterBox3
+    push DIR_RIGHT
+    push TRUE
+    call MoveToTarget
+    jmp @@end
+@@CheckWallAfterBox3:
+    cmp ax, OBJ_WALL
+    jne @@CheckBoxAfterBox3
+    jmp @@end
+@@CheckBoxAfterBox3:
+    cmp ax, OBJ_BOX
+    jne @@CheckBoxOnTargetAfterBox3
+    jmp @@end
+@@CheckBoxOnTargetAfterBox3:
+    cmp ax, OBJ_BOX_ON_TARGET
 
 ;---------------------------
    
@@ -948,13 +1100,13 @@ PROC Animate
 
     mov cx, SCRN_BOX_WIDTH ;width and height are the same
 @@Anim:
-    Display_BMP di, FromX, FromY
+    Display_BMP di, FromX, FromY    ;print first box background
 
     mov dx, GapX
     add CurrentX, dx
     mov dx, GapY
     add CurrentY, dx
-    Display_BMP si, CurrentX, CurrentY
+    Display_BMP si, CurrentX, CurrentY      ;print the moving object
 
     cmp IsPushBox, TRUE
     jne @@loopEnd
@@ -962,7 +1114,7 @@ PROC Animate
     add CurrentXTarget2, dx
     mov dx, GapY
     add CurrentYTarget2, dx
-    Display_BMP bx, CurrentXTarget2, CurrentYTarget2
+    Display_BMP bx, CurrentXTarget2, CurrentYTarget2        ;print the second moving objects
 @@loopEnd:
     loop @@Anim
 @@end:
