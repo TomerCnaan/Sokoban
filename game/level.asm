@@ -149,7 +149,7 @@ ENDM get_box_coord
 ; sets box value in array. gets(row, col) 
 ;
 ;------------------------------------------------------------------------
-MACRO set_box_value row,col
+MACRO set_arr_value row,col,obj
    pusha
    push col
    mov ax, row
@@ -159,7 +159,7 @@ MACRO set_box_value row,col
    add ax, col
    mov si, offset _screenArray
    add si, ax
-   mov [byte si], OBJ_BOX
+   mov [byte si], obj
    popa
 ENDM
 ;------------------------------------------------------------------------
@@ -1117,12 +1117,216 @@ PROC Animate
     Display_BMP bx, CurrentXTarget2, CurrentYTarget2        ;print the second moving objects
 @@loopEnd:
     loop @@Anim
+    
+    push GapX
+    push GapY
+    push FromObj
+    push TargObj
+    push TargObj2
+    push IsPushBox
+    
+    call UpdateArray
+
 @@end:
     popa
     mov sp,bp
     pop bp
     ret 20
 ENDP Animate
+;------------------------------------------------------------------------
+; Description: 
+; 
+; Input:
+;     push  X1 
+;     push  X2
+;     call UpdateArray
+; 
+; Output: 
+;     AX - 
+; 
+; Affected Registers: 
+; Limitations: 
+;------------------------------------------------------------------------
+PROC UpdateArray
+    push bp
+    mov bp,sp
+
+    pusha
+ 
+    ; now the stack is
+    ; bp-2 => 
+    ; bp+0 => old base pointer
+    ; bp+2 => return address
+    ; bp+4 => Is pushing a box 
+    ; bp+6 => second obj after player
+    ; bp+8 => first obj after player
+    ; bp+10 => player / player on target
+    ; bp+12 => GapY
+    ; bp+14 => GapX
+    ; saved registers
+ 
+    ;{
+    varName_         equ        [word bp-2]
+ 
+    IsPushBox        equ        [word bp+4]
+    TargObj2         equ        [word bp+6]
+    TargObj          equ        [word bp+8]
+    FromObj          equ        [word bp+10]
+    GapY             equ        [word bp+12]
+    GapX             equ        [word bp+14]
+    ;}
+ 
+@@IsDown:
+    cmp GapY, ANIM_GAP
+    jne @@IsUp
+
+    cmp FromObj, OBJ_PLAYER
+    jne @@CheckPlayerTrg
+    set_arr_value [_currentRow],[_currentCol],OBJ_FLOOR         ;changing the value where the player was standing 
+    jmp @@drawSecond    
+@@CheckPlayerTrg:
+    set_arr_value [_currentRow],[_currentCol],OBJ_TARGET
+@@drawSecond:                   ;changing the value where the player is standing
+    inc [_currentRow]
+    cmp TargObj, OBJ_TARGET
+    jne @@CheckBoxTrg
+    set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER_ON_TARGET      
+    jmp @@drawThird
+@@CheckBoxTrg:
+    cmp TargObj, OBJ_BOX_ON_TARGET
+    jne @@drawPlayer
+    set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER_ON_TARGET
+    jmp @@drawThird
+@@drawPlayer:
+    set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER
+ @@drawThird:                      ;changing the value where the box is standing
+    cmp IsPushBox, TRUE
+    jne @@end
+    mov cx, [_currentRow]
+    inc cx
+    mov dx, [_currentCol]
+    cmp TargObj2, OBJ_TARGET
+    jne @@drawBox
+    set_arr_value cx,dx,OBJ_BOX_ON_TARGET
+    jmp @@end
+@@drawBox:
+    set_arr_value cx,dx,OBJ_BOX
+    jmp @@end
+;-------------------------------
+@@IsUp:
+    cmp GapY, ANIM_GAP_NEG
+    jne @@IsLeft
+
+    cmp FromObj, OBJ_PLAYER
+    jne @@CheckPlayerTrg1
+    set_arr_value [_currentRow],[_currentCol],OBJ_FLOOR         ;changing the value where the player was standing
+    jmp @@drawSecond1    
+@@CheckPlayerTrg1:
+    set_arr_value [_currentRow],[_currentCol],OBJ_TARGET
+@@drawSecond1:                   ;changing the value where the player is standing
+    dec [_currentRow]
+    cmp TargObj, OBJ_TARGET
+    jne @@CheckBoxTrg1
+    set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER_ON_TARGET      
+    jmp @@drawThird1
+@@CheckBoxTrg1:
+    cmp TargObj, OBJ_BOX_ON_TARGET
+    jne @@drawPlayer1
+    set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER_ON_TARGET
+    jmp @@drawThird1
+@@drawPlayer1:
+    set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER
+ @@drawThird1:                      ;changing the value where the box is standing
+    cmp IsPushBox, TRUE
+    jne @@end
+    mov cx, [_currentRow]
+    dec cx
+    mov dx, [_currentCol]
+    cmp TargObj2, OBJ_TARGET
+    jne @@drawBox1
+    set_arr_value cx,dx,OBJ_BOX_ON_TARGET
+    jmp @@end
+@@drawBox1:
+    set_arr_value cx,dx,OBJ_BOX
+    jmp @@end
+;-------------------------------
+@@IsLeft:
+    cmp GapX, ANIM_GAP_NEG
+    jne @@Right
+
+    cmp FromObj, OBJ_PLAYER
+    jne @@CheckPlayerTrg2
+    set_arr_value [_currentRow],[_currentCol],OBJ_FLOOR         ;changing the value where the player was standing
+    jmp @@drawSecond2    
+@@CheckPlayerTrg2:
+    set_arr_value [_currentRow],[_currentCol],OBJ_TARGET
+@@drawSecond2:                   ;changing the value where the player is standing
+    dec [_currentCol]
+    cmp TargObj, OBJ_TARGET
+    jne @@CheckBoxTrg2
+    set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER_ON_TARGET      
+    jmp @@drawThird2
+@@CheckBoxTrg2:
+    cmp TargObj, OBJ_BOX_ON_TARGET
+    jne @@drawPlayer2
+    set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER_ON_TARGET
+    jmp @@drawThird2
+@@drawPlayer2:
+    set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER
+ @@drawThird2:                      ;changing the value where the box is standing
+    cmp IsPushBox, TRUE
+    jne @@end
+    mov cx, [_currentRow]
+    mov dx, [_currentCol]
+    dec dx
+    cmp TargObj2, OBJ_TARGET
+    jne @@drawBox2
+    set_arr_value cx,dx,OBJ_BOX_ON_TARGET
+    jmp @@end
+@@drawBox2:
+    set_arr_value cx,dx,OBJ_BOX
+    jmp @@end
+;-------------------------------
+@@Right:
+    cmp FromObj, OBJ_PLAYER
+    jne @@CheckPlayerTrg3
+    set_arr_value [_currentRow],[_currentCol],OBJ_FLOOR         ;changing the value where the player was standing
+    jmp @@drawSecond3    
+@@CheckPlayerTrg3:
+    set_arr_value [_currentRow],[_currentCol],OBJ_TARGET
+@@drawSecond3:                   ;changing the value where the player is standing
+    inc [_currentCol]
+    cmp TargObj, OBJ_TARGET
+    jne @@CheckBoxTrg3
+    set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER_ON_TARGET      
+    jmp @@drawThird3
+@@CheckBoxTrg3:
+    cmp TargObj, OBJ_BOX_ON_TARGET
+    jne @@drawPlayer3
+    set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER_ON_TARGET
+    jmp @@drawThird3
+@@drawPlayer3:
+    set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER
+ @@drawThird3:                      ;changing the value where the box is standing
+    cmp IsPushBox, TRUE
+    jne @@end
+    mov cx, [_currentRow]
+    mov dx, [_currentCol]
+    inc dx
+    cmp TargObj2, OBJ_TARGET
+    jne @@drawBox3
+    set_arr_value cx,dx,OBJ_BOX_ON_TARGET
+    jmp @@end
+@@drawBox3:
+    set_arr_value cx,dx,OBJ_BOX
+    jmp @@end
+;-------------------------------
+@@end:
+    popa
+    mov sp,bp
+    pop bp
+    ret 12
+ENDP UpdateArray
 ;------------------------------------------------------------------------
 ; Description: 
 ; 
