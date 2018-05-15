@@ -8,9 +8,6 @@
 LOCALS @@
 
 DATASEG
-    SEEK_SET        equ         0
-    SEEK_CUR        equ         1 
-    SEEK_END        equ         2
 
 CODESEG
     ; These vars are defined in CODESEG
@@ -235,15 +232,4 @@ MACRO m_fread length, bufOffset, bufSegment
     push bufOffset
     push bufSegment
     call fread
-ENDM
-;----------------------------------------------------------------------
-; Seek file
-;
-; grm_fseek (whence, offset_high, offset_low)
-;----------------------------------------------------------------------
-MACRO grm_fseek whence, offset_high, offset_low
-    push whence
-    push offset_high
-    push offset_low
-    call fseek
 ENDM

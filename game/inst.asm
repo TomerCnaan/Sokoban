@@ -1,11 +1,11 @@
 ;===================================================================================================
 ; Written By: Tomer Cnaan
-; Description: Welcome screen
+; Description: Instructions screen
 ;===================================================================================================
 LOCALS @@
 
 DATASEG
- _imageInstructions     Bitmap       {ImagePath="images\\inst.bmp"}
+        _imageInstructions     Bitmap       {ImagePath="images\\inst.bmp"}
 
 CODESEG
 ;------------------------------------------------------------------------

@@ -1,8 +1,5 @@
 ;===================================================================================================
 ; Written By: Tomer Cnaan (212789382)
-; Date: 23-04-2018
-; File: play.asm
-;
 ; Description: 
 ;===================================================================================================
 LOCALS @@
@@ -18,7 +15,6 @@ STATE_EXIT          = 10
 DATASEG
     ; Game state
     _gameState           dw           0
-    _welcomeImage        Bitmap       {ImagePath="images\\boxtrg.bmp"}
     _currentLevel        dw           1
 
 CODESEG
@@ -35,6 +31,9 @@ ENDM
     include "game/inst.asm"
 ;=====================================
 
+;------------------------------------------------------------------------
+; Moves to the next level or go out to welcome screen
+;------------------------------------------------------------------------
 MACRO next_level
 local _EndGame, _end
     cmp [_currentLevel], MAX_LEVELS
