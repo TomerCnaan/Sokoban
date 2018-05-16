@@ -26,8 +26,8 @@ PROC HandleWelcome
 
     mov si, offset _imageWelcome
     Display_BMP si, 0 , 0
-    call WaitForKeypress
 @@CheckKey:
+    call WaitForKeypress
     cmp ax, KEY_ESC
     jne @@checkP
     set_state STATE_EXIT
@@ -42,6 +42,7 @@ PROC HandleWelcome
     jne @@CheckKey
     set_state STATE_INST
     jmp @@end
+    
 
 @@end:
     gr_set_video_mode_txt

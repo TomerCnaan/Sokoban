@@ -6,27 +6,27 @@
 LOCALS @@
 
 ; Box size
-SCRN_BOX_WIDTH          = 16
-SCRN_BOX_HEIGHT         = SCRN_BOX_WIDTH
-; Game area
-SCRN_DRAW_AREA_TOP_X    = 0
-SCRN_DRAW_AREA_TOP_Y    = 16
-SCRN_DRAW_AREA_WIDTH    = 20*SCRN_BOX_WIDTH
-SCRN_DRAW_AREA_HEIGHT   = 11*SCRN_BOX_HEIGHT
+SCRN_BOX_WIDTH              = 16
+SCRN_BOX_HEIGHT             = SCRN_BOX_WIDTH                        ; same as width
 ; Number of boxes in each row and col
-SCRN_NUM_BOXES_WIDTH    = SCRN_DRAW_AREA_WIDTH/SCRN_BOX_WIDTH
-SCRN_NUM_BOXES_HEIGHT   = SCRN_DRAW_AREA_HEIGHT/SCRN_BOX_HEIGHT
+SCRN_NUM_BOXES_WIDTH        = 20
+SCRN_NUM_BOXES_HEIGHT       = 11
+; Game area
+SCRN_DRAW_AREA_TOP_X        = 0
+SCRN_DRAW_AREA_TOP_Y        = 16
+SCRN_DRAW_AREA_WIDTH        = SCRN_NUM_BOXES_WIDTH*SCRN_BOX_WIDTH
+SCRN_DRAW_AREA_HEIGHT       = SCRN_NUM_BOXES_HEIGHT*SCRN_BOX_HEIGHT
 ; Array size
-SCRN_ARRAY_SIZE         = SCRN_NUM_BOXES_WIDTH * SCRN_NUM_BOXES_HEIGHT
+SCRN_ARRAY_SIZE             = SCRN_NUM_BOXES_WIDTH * SCRN_NUM_BOXES_HEIGHT
 ; LVL file sizes
-LVL_FILE_NUM_LINES      = SCRN_NUM_BOXES_HEIGHT                 ; numberof lines in a lvl file
-LVL_FILE_LINE_LEN       = SCRN_NUM_BOXES_WIDTH + 2              ; number of chars in a lvl line (2 for \r\n)
-LVL_FILE_SIZE           = LVL_FILE_LINE_LEN*LVL_FILE_NUM_LINES
+LVL_FILE_NUM_LINES          = SCRN_NUM_BOXES_HEIGHT                 ; numberof lines in a lvl file
+LVL_FILE_LINE_LEN           = SCRN_NUM_BOXES_WIDTH + 2              ; number of chars in a lvl line (2 for \r\n)
+LVL_FILE_SIZE               = LVL_FILE_LINE_LEN*LVL_FILE_NUM_LINES
 ; Animation
-ANIM_GAP                = 1
-ANIM_GAP_NEG            = -1*ANIM_GAP
-ANIM_DELAY_MS           = 10
-ANIM_STEPS              = SCRN_BOX_WIDTH / ANIM_GAP
+ANIM_GAP                    = 1
+ANIM_GAP_NEG                = -1*ANIM_GAP
+ANIM_DELAY_MS               = 10
+ANIM_STEPS                  = SCRN_BOX_WIDTH / ANIM_GAP
 
 ; Game objects
 OBJ_FLOOR                   = 0     
@@ -48,14 +48,14 @@ SYMBOL_FLOOR                = ' '
 SYMBOL_EMPTY                = '&'
 
 ; Possible directions
-DIR_UP                  = 1
-DIR_DOWN                = 2
-DIR_LEFT                = 3
-DIR_RIGHT               = 4
-DIR_INVALID             = 10
+DIR_UP                      = 1
+DIR_DOWN                    = 2
+DIR_LEFT                    = 3
+DIR_RIGHT                   = 4
+DIR_INVALID                 = 10
 
-MAX_LEVELS              = 3
-LEVEL_FILE_OFFSET       = 8
+MAX_LEVELS                  = 3
+LEVEL_FILE_OFFSET           = 8
 
 DATASEG
     ; Bitmaps
@@ -70,10 +70,8 @@ DATASEG
 
     ; LVL Files
     _fileLevel       db          "lvl\\lvl1.dat",0
-    ;_fileLevel2      db          "lvl\\lvl2.dat",0
+    _levelLine       db          LVL_FILE_LINE_LEN dup(0)           ; buffer for reading LVL files
 
-    ; buffer for reading LVL files
-    _levelLine       db          LVL_FILE_LINE_LEN dup(0)
     ; 2D array representing screen objects
     _screenArray     db          SCRN_ARRAY_SIZE dup(0)
 
@@ -92,7 +90,7 @@ CODESEG
 ; init_level: 
 ;
 ;------------------------------------------------------------------------
-MACRO init_level X1, X2
+MACRO init_level 
     mov [_currentCol],0
     mov [_currentRow],0
     mov [_numTargets],0
@@ -199,13 +197,23 @@ PROC HandleLevel
 
     push offset _fileLevel
     call ReadLevelFile
+    cmp ax, FALSE
+    je @@errorFile
+
     push offset _screenArray
     call PrintLevelToScreen
     call HandleKey
     cmp ax,TRUE
     jne @@end
 
+
+
+    jmp @@end
     
+@@errorFile:
+    push offset _errLoadLevel
+    call PrintStr
+    call WaitForKeypress    
 
 @@end:
     gr_set_video_mode_txt
@@ -241,6 +249,7 @@ PROC ReadLevelFile
     mov si, lvlFilePath
     m_fsize si ds
 
+    mov bx, LVL_FILE_SIZE
     cmp ax, LVL_FILE_SIZE
     jne @@badSize
 
@@ -559,20 +568,17 @@ PROC HandleArrow
     call GetArrayValueDir
     ; ax = value in distance 1
 
-@@IsDown:   ;player movement check
-    cmp Direction, DIR_DOWN
-    jne @@IsUp
-    
+@@IsDown:   ;player movement check  
     cmp ax, OBJ_FLOOR
     jne @@CheckTarget
-    push DIR_DOWN
+    push Direction
     push FALSE
     call MoveToTarget
     jmp @@end
 @@CheckTarget:
     cmp ax, OBJ_TARGET
     jne @@CheckWall
-    push DIR_DOWN
+    push Direction
     push FALSE
     call MoveToTarget
     jmp @@end
@@ -593,14 +599,14 @@ PROC HandleArrow
 
     cmp ax, OBJ_FLOOR
     jne @@CheckTargetAfterBox
-    push DIR_DOWN
+    push Direction
     push TRUE
     call MoveToTarget
     jmp @@end
 @@CheckTargetAfterBox:
     cmp ax, OBJ_TARGET
     jne @@CheckWallAfterBox
-    push DIR_DOWN
+    push Direction
     push TRUE
     call MoveToTarget
     jmp @@end
@@ -616,120 +622,7 @@ PROC HandleArrow
     cmp ax, OBJ_BOX_ON_TARGET
     jmp @@end
 
-;----------------------------
-@@IsUp:
-    cmp Direction, DIR_UP
-    jne @@IsLeft
 
-    cmp ax, OBJ_FLOOR
-    jne @@CheckTarget1
-    push DIR_UP
-    push FALSE
-    call MoveToTarget
-    jmp @@end
-@@CheckTarget1:
-    cmp ax, OBJ_TARGET
-    jne @@CheckWall1
-    push DIR_UP
-    push FALSE
-    call MoveToTarget
-    jmp @@end
-@@CheckWall1:
-    cmp ax, OBJ_WALL
-    jne @@CheckBox1
-    jmp @@end
-@@CheckBox1:
-    cmp ax, OBJ_BOX
-    je @@CheckNextObj1
-    cmp ax, OBJ_BOX_ON_TARGET
-@@CheckNextObj1: ;Box movement check
-
-    push Direction
-    push 2 ;distance
-    call GetArrayValueDir
-    ; ax = value in distance 2
-
-    cmp ax, OBJ_FLOOR
-    jne @@CheckTargetAfterBox1
-    push DIR_UP
-    push TRUE
-    call MoveToTarget
-    jmp @@end
-@@CheckTargetAfterBox1:
-    cmp ax, OBJ_TARGET
-    jne @@CheckWallAfterBox1
-    push DIR_UP
-    push TRUE
-    call MoveToTarget
-    jmp @@end
-@@CheckWallAfterBox1:
-    cmp ax, OBJ_WALL
-    jne @@CheckBoxAfterBox1
-    jmp @@end
-@@CheckBoxAfterBox1:
-    cmp ax, OBJ_BOX
-    jne @@CheckBoxOnTargetAfterBox1
-    jmp @@end
-@@CheckBoxOnTargetAfterBox1:
-    cmp ax, OBJ_BOX_ON_TARGET
-
-    jmp @@end
-;---------------------------
-@@IsLeft:
-    cmp Direction, DIR_LEFT
-    jne @@Right
-
-    cmp ax, OBJ_FLOOR
-    jne @@CheckTarget2
-    push DIR_LEFT
-    push FALSE
-    call MoveToTarget
-    jmp @@end
-@@CheckTarget2:
-    cmp ax, OBJ_TARGET
-    jne @@CheckWall2
-    push DIR_LEFT
-    push FALSE
-    call MoveToTarget
-    jmp @@end
-@@CheckWall2:
-    cmp ax, OBJ_WALL
-    jne @@CheckBox2
-    jmp @@end
-@@CheckBox2:
-    cmp ax, OBJ_BOX
-    je @@CheckNextObj2
-    cmp ax, OBJ_BOX_ON_TARGET
-@@CheckNextObj2: ;Box movement check
-
-    push Direction
-    push 2 ;distance
-    call GetArrayValueDir
-    ; ax = value in distance 2
-
-    cmp ax, OBJ_FLOOR
-    jne @@CheckTargetAfterBox2
-    push DIR_LEFT
-    push TRUE
-    call MoveToTarget
-    jmp @@end
-@@CheckTargetAfterBox2:
-    cmp ax, OBJ_TARGET
-    jne @@CheckWallAfterBox2
-    push DIR_LEFT
-    push TRUE
-    call MoveToTarget
-    jmp @@end
-@@CheckWallAfterBox2:
-    cmp ax, OBJ_WALL
-    jne @@CheckBoxAfterBox2
-    jmp @@end
-@@CheckBoxAfterBox2:
-    cmp ax, OBJ_BOX
-    jne @@CheckBoxOnTargetAfterBox2
-    jmp @@end
-@@CheckBoxOnTargetAfterBox2:
-    cmp ax, OBJ_BOX_ON_TARGET
 
     jmp @@end
 ;---------------------------
