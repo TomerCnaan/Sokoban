@@ -208,7 +208,7 @@ PROC HandleLevel
 
     push offset _screenArray
     call PrintLevelToScreen
-;______________________________
+;______________________________ TODO
     push MOVE_COLOR
     push offset _stringMoves
     push MOVE_X
@@ -504,10 +504,10 @@ ENDP PrintLevelToScreen
 PROC HandleKey
     push bp
     mov bp,sp
-    pusha
+    push cx 
 
     mov cx, TRUE
-@@WaitForKey:
+@@WaitForKey:                      
     call WaitForKeypress
     cmp ax, KEY_DOWN
     jne @@CheckKeyUp
@@ -565,7 +565,7 @@ jmp @@WaitForKey
 
 @@end:
     mov ax, cx
-    popa
+    pop cx
     mov sp,bp
     pop bp
     ret 
@@ -598,7 +598,7 @@ PROC HandleArrow
     call GetArrayValueDir
     ; ax = value in distance 1
 
-@@IsDown:   ;player movement check  
+@@IsDown:   ;player movement check              ; TODO
     cmp ax, OBJ_FLOOR
     jne @@CheckTarget
     push Direction
@@ -652,66 +652,6 @@ PROC HandleArrow
     cmp ax, OBJ_BOX_ON_TARGET
     jmp @@end
 
-
-
-    jmp @@end
-;---------------------------
-@@Right:
-
-    cmp ax, OBJ_FLOOR
-    jne @@CheckTarget3
-    push DIR_RIGHT
-    push FALSE
-    call MoveToTarget
-    jmp @@end
-@@CheckTarget3:
-    cmp ax, OBJ_TARGET
-    jne @@CheckWall3
-    push DIR_RIGHT
-    push FALSE
-    call MoveToTarget
-    jmp @@end
-@@CheckWall3:
-    cmp ax, OBJ_WALL
-    jne @@CheckBox3
-    jmp @@end
-@@CheckBox3:
-    cmp ax, OBJ_BOX
-    je @@CheckNextObj3
-    cmp ax, OBJ_BOX_ON_TARGET
-@@CheckNextObj3: ;Box movement check
-
-    push Direction
-    push 2 ;distance
-    call GetArrayValueDir
-    ; ax = value in distance 2
-
-    cmp ax, OBJ_FLOOR
-    jne @@CheckTargetAfterBox3
-    push DIR_RIGHT
-    push TRUE
-    call MoveToTarget
-    jmp @@end
-@@CheckTargetAfterBox3:
-    cmp ax, OBJ_TARGET
-    jne @@CheckWallAfterBox3
-    push DIR_RIGHT
-    push TRUE
-    call MoveToTarget
-    jmp @@end
-@@CheckWallAfterBox3:
-    cmp ax, OBJ_WALL
-    jne @@CheckBoxAfterBox3
-    jmp @@end
-@@CheckBoxAfterBox3:
-    cmp ax, OBJ_BOX
-    jne @@CheckBoxOnTargetAfterBox3
-    jmp @@end
-@@CheckBoxOnTargetAfterBox3:
-    cmp ax, OBJ_BOX_ON_TARGET
-
-;---------------------------
-   
 
 @@end:
     popa
@@ -1057,7 +997,7 @@ PROC Animate
     ret 20
 ENDP Animate
 ;------------------------------------------------------------------------
-; Description: 
+; Description:     
 ; 
 ; Input:
 ;     push  X1 

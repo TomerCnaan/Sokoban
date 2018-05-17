@@ -202,7 +202,7 @@ PROC PrintStrVGA
     pop ax
     mov sp,bp
     pop bp
-    ret 6
+    ret 8
 ENDP PrintStrVGA
 ;----------------------------------------------------------
 ; Set cursor position
