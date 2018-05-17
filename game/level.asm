@@ -10,10 +10,10 @@ SCRN_BOX_WIDTH              = 16
 SCRN_BOX_HEIGHT             = SCRN_BOX_WIDTH                        ; same as width
 ; Number of boxes in each row and col
 SCRN_NUM_BOXES_WIDTH        = 20
-SCRN_NUM_BOXES_HEIGHT       = 11
+SCRN_NUM_BOXES_HEIGHT       = 10
 ; Game area
 SCRN_DRAW_AREA_TOP_X        = 0
-SCRN_DRAW_AREA_TOP_Y        = 16
+SCRN_DRAW_AREA_TOP_Y        = 26
 SCRN_DRAW_AREA_WIDTH        = SCRN_NUM_BOXES_WIDTH*SCRN_BOX_WIDTH
 SCRN_DRAW_AREA_HEIGHT       = SCRN_NUM_BOXES_HEIGHT*SCRN_BOX_HEIGHT
 ; Array size
@@ -57,6 +57,11 @@ DIR_INVALID                 = 10
 MAX_LEVELS                  = 3
 LEVEL_FILE_OFFSET           = 8
 
+; Move string
+MOVE_X                      = 1
+MOVE_Y                      = 23
+MOVE_COLOR                  = 3
+
 DATASEG
     ; Bitmaps
     _imageBoxTarget      Bitmap       {ImagePath="images\\boxtrg.bmp"}
@@ -83,7 +88,7 @@ DATASEG
 
     ; Strings
     _errLoadLevel    db          "Error loading level file","$"
-    _stringSokoban   db          "SOKOBAN","$"
+    _stringMoves     db          "Moves:",NULL
 
 CODESEG
 
@@ -190,7 +195,6 @@ PROC HandleLevel
     mov bp,sp
     pusha
     
-    call PrintSokoban
     mov si, offset _fileLevel
     add si, LEVEL_FILE_OFFSET
     mov ax, [_currentLevel]
@@ -204,6 +208,13 @@ PROC HandleLevel
 
     push offset _screenArray
     call PrintLevelToScreen
+;______________________________
+    push MOVE_COLOR
+    push offset _stringMoves
+    push MOVE_X
+    push MOVE_Y
+    call PrintStrVGA 
+;_____________________________
     call HandleKey
     cmp ax,TRUE
     jne @@end
@@ -225,38 +236,6 @@ PROC HandleLevel
     pop bp
     ret 
 ENDP HandleLevel
-;------------------------------------------------------------------------
-; Prints SOKOBAN to screen in vga mode 
-; 
-; Input:
-;     call PrintSokoban
-; 
-; Affected Registers: none  
-;------------------------------------------------------------------------
-PROC PrintSokoban
-    push bp
-    mov bp,sp
-    pusha
- 
-   ; AH=2h: Set cursor position
-    mov dl, 0 ; Column
-    mov dh, 0 ; Row
-    mov bx, 0 ; Page number, 0 for graphics modes
-    mov ah, 2h
-    int 10h
-
-    ; AH=9h: Print string
-    mov dx, offset _stringSokoban
-    mov ah, 9h
-    int 21h
-
- 
-@@end:
-    popa
-    mov sp,bp
-    pop bp
-    ret 
-ENDP PrintSokoban
 ;------------------------------------------------------------------------
 ; ReadLevelFile: 
 ; 
