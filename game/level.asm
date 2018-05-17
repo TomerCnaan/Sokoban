@@ -83,6 +83,7 @@ DATASEG
 
     ; Strings
     _errLoadLevel    db          "Error loading level file","$"
+    _stringSokoban   db          "SOKOBAN","$"
 
 CODESEG
 
@@ -188,7 +189,8 @@ PROC HandleLevel
     push bp
     mov bp,sp
     pusha
- 
+    
+    call PrintSokoban
     mov si, offset _fileLevel
     add si, LEVEL_FILE_OFFSET
     mov ax, [_currentLevel]
@@ -216,12 +218,45 @@ PROC HandleLevel
     call WaitForKeypress    
 
 @@end:
+    mov [_numTargets] , 0
     gr_set_video_mode_txt
     popa
     mov sp,bp
     pop bp
     ret 
 ENDP HandleLevel
+;------------------------------------------------------------------------
+; Prints SOKOBAN to screen in vga mode 
+; 
+; Input:
+;     call PrintSokoban
+; 
+; Affected Registers: none  
+;------------------------------------------------------------------------
+PROC PrintSokoban
+    push bp
+    mov bp,sp
+    pusha
+ 
+   ; AH=2h: Set cursor position
+    mov dl, 0 ; Column
+    mov dh, 0 ; Row
+    mov bx, 0 ; Page number, 0 for graphics modes
+    mov ah, 2h
+    int 10h
+
+    ; AH=9h: Print string
+    mov dx, offset _stringSokoban
+    mov ah, 9h
+    int 21h
+
+ 
+@@end:
+    popa
+    mov sp,bp
+    pop bp
+    ret 
+ENDP PrintSokoban
 ;------------------------------------------------------------------------
 ; ReadLevelFile: 
 ; 
@@ -499,25 +534,41 @@ PROC HandleKey
     jne @@CheckKeyUp
     push DIR_DOWN
     call HandleArrow
-    jmp @@WaitForKey
+    cmp [_numTargets], 0
+    jne @@WaitForKey
+    set_state STATE_NEXT_LEVEL
+    mov cx, FALSE
+    jmp @@end
 @@CheckKeyUp:
     cmp ax, KEY_UP
     jne @@CheckKeyLeft
     push DIR_UP
     call HandleArrow
-   jmp @@WaitForKey
+    cmp [_numTargets], 0
+    jne @@WaitForKey
+    set_state STATE_NEXT_LEVEL
+    mov cx, FALSE
+    jmp @@end
 @@CheckKeyLeft:
     cmp ax, KEY_LEFT
     jne @@CheckKeyRight
     push DIR_LEFT
     call HandleArrow
-    jmp @@WaitForKey
+    cmp [_numTargets], 0
+    jne @@WaitForKey
+    set_state STATE_NEXT_LEVEL
+    mov cx, FALSE
+    jmp @@end
 @@CheckKeyRight:
     cmp ax, KEY_RIGHT
     jne @@CheckKeyR
     push DIR_RIGHT
     call HandleArrow
-    jmp @@WaitForKey
+    cmp [_numTargets], 0
+    jne @@WaitForKey
+    set_state STATE_NEXT_LEVEL
+    mov cx, FALSE
+    jmp @@end
 @@CheckKeyR:
     cmp ax, KEY_R
     jne @@CheckKeyEsc
@@ -1089,6 +1140,7 @@ PROC UpdateArray
     cmp TargObj, OBJ_BOX_ON_TARGET
     jne @@drawPlayer
     set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER_ON_TARGET
+    inc [_numTargets]
     jmp @@drawThird
 @@drawPlayer:
     set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER
@@ -1101,6 +1153,7 @@ PROC UpdateArray
     cmp TargObj2, OBJ_TARGET
     jne @@drawBox
     set_arr_value cx,dx,OBJ_BOX_ON_TARGET
+    dec [_numTargets]
     jmp @@end
 @@drawBox:
     set_arr_value cx,dx,OBJ_BOX
@@ -1126,6 +1179,7 @@ PROC UpdateArray
     cmp TargObj, OBJ_BOX_ON_TARGET
     jne @@drawPlayer1
     set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER_ON_TARGET
+    inc [_numTargets]
     jmp @@drawThird1
 @@drawPlayer1:
     set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER
@@ -1138,6 +1192,7 @@ PROC UpdateArray
     cmp TargObj2, OBJ_TARGET
     jne @@drawBox1
     set_arr_value cx,dx,OBJ_BOX_ON_TARGET
+    dec [_numTargets]
     jmp @@end
 @@drawBox1:
     set_arr_value cx,dx,OBJ_BOX
@@ -1163,6 +1218,7 @@ PROC UpdateArray
     cmp TargObj, OBJ_BOX_ON_TARGET
     jne @@drawPlayer2
     set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER_ON_TARGET
+    inc [_numTargets]
     jmp @@drawThird2
 @@drawPlayer2:
     set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER
@@ -1175,6 +1231,7 @@ PROC UpdateArray
     cmp TargObj2, OBJ_TARGET
     jne @@drawBox2
     set_arr_value cx,dx,OBJ_BOX_ON_TARGET
+    dec [_numTargets]
     jmp @@end
 @@drawBox2:
     set_arr_value cx,dx,OBJ_BOX
@@ -1197,6 +1254,7 @@ PROC UpdateArray
     cmp TargObj, OBJ_BOX_ON_TARGET
     jne @@drawPlayer3
     set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER_ON_TARGET
+    inc [_numTargets]
     jmp @@drawThird3
 @@drawPlayer3:
     set_arr_value [_currentRow],[_currentCol],OBJ_PLAYER
@@ -1209,6 +1267,7 @@ PROC UpdateArray
     cmp TargObj2, OBJ_TARGET
     jne @@drawBox3
     set_arr_value cx,dx,OBJ_BOX_ON_TARGET
+    dec [_numTargets]
     jmp @@end
 @@drawBox3:
     set_arr_value cx,dx,OBJ_BOX
