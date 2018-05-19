@@ -24,7 +24,7 @@ PROC PrintChar
 
     mov sp,bp
     pop bp
-    ret
+    ret 2
 ENDP PrintChar
 ;----------------------------------------------------------
 ; Prints a char to the screen + New line

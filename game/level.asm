@@ -46,6 +46,7 @@ SYMBOL_BOX                  = '+'
 SYMBOL_WALL                 = '*'
 SYMBOL_FLOOR                = ' '
 SYMBOL_EMPTY                = '&'
+SYMBOL_BOX_ON_TARGET        = '%'
 
 ; Possible directions
 DIR_UP                      = 1
@@ -57,10 +58,18 @@ DIR_INVALID                 = 10
 MAX_LEVELS                  = 3
 LEVEL_FILE_OFFSET           = 8
 
-; Move string
-MOVE_X                      = 1
-MOVE_Y                      = 23
-MOVE_COLOR                  = 3
+; Level string
+LEVEL_X                      = 0
+LEVEL_Y                      = 24
+LEVEL_COLOR                  = 25
+
+;move coordinates
+MOVE_X                       = 22
+MOVE_Y                       = 24
+
+;message
+MSG_X                       = 115
+MSG_Y                       = 63
 
 DATASEG
     ; Bitmaps
@@ -72,7 +81,10 @@ DATASEG
     _imagePlayerTarget   Bitmap       {ImagePath="images\\plytrg.bmp"}
     _imageTarget         Bitmap       {ImagePath="images\\target.bmp"}
     _imageEmpty          Bitmap       {ImagePath="images\\empty.bmp"}
-
+    ; header and levels
+    _imageHeader          Bitmap       {ImagePath="images\\header.bmp"}
+    _imageComplete        Bitmap       {ImagePath="images\\cmplt.bmp"}
+    _imageEndGame         Bitmap       {ImagePath="images\\over.bmp"}
     ; LVL Files
     _fileLevel       db          "lvl\\lvl1.dat",0
     _levelLine       db          LVL_FILE_LINE_LEN dup(0)           ; buffer for reading LVL files
@@ -86,10 +98,17 @@ DATASEG
     ; target count
     _numTargets      dw          0
 
+    ;move count
+    _numMoves        dw          0
+
     ; Strings
     _errLoadLevel    db          "Error loading level file","$"
+    _stringLevel     db          "Level: ",NULL
     _stringMoves     db          "Moves:",NULL
 
+    
+    
+    
 CODESEG
 
 ;------------------------------------------------------------------------
@@ -208,13 +227,10 @@ PROC HandleLevel
 
     push offset _screenArray
     call PrintLevelToScreen
-;______________________________ TODO
-    push MOVE_COLOR
-    push offset _stringMoves
-    push MOVE_X
-    push MOVE_Y
-    call PrintStrVGA 
-;_____________________________
+
+    mov [_numMoves], 0
+    call PrintCounters
+
     call HandleKey
     cmp ax,TRUE
     jne @@end
@@ -229,7 +245,6 @@ PROC HandleLevel
     call WaitForKeypress    
 
 @@end:
-    mov [_numTargets] , 0
     gr_set_video_mode_txt
     popa
     mov sp,bp
@@ -272,6 +287,7 @@ PROC ReadLevelFile
 
     mov cx, LVL_FILE_NUM_LINES
     mov di, 0           ; current line
+    mov [_numTargets] , 0
 @@rd:    
     ; read single line, including new line (0A,0D) chars at the end
     mov si, offset _levelLine
@@ -370,9 +386,16 @@ PROC ParseLevelData
 
 @@floor:
     cmp al,SYMBOL_FLOOR
-    jne @@empty
+    jne @@boxOnTarget
 
     mov [BYTE si], OBJ_FLOOR
+    jmp @@cont
+
+@@boxOnTarget:
+    cmp al,SYMBOL_BOX_ON_TARGET
+    jne @@empty
+
+    mov [BYTE si], OBJ_BOX_ON_TARGET
     jmp @@cont
 
 @@empty:
@@ -482,6 +505,11 @@ PROC PrintLevelToScreen
     inc si
 @@LoopEnd:
     loop @@PrintToScreenFromArray
+
+    ; Print game header
+    mov si, offset _imageHeader
+    Display_BMP si, 0 ,0
+
 @@end:
     popa
     add sp, 4
@@ -512,12 +540,12 @@ PROC HandleKey
     cmp ax, KEY_DOWN
     jne @@CheckKeyUp
     push DIR_DOWN
-    call HandleArrow
+    call HandleArrow 
     cmp [_numTargets], 0
     jne @@WaitForKey
     set_state STATE_NEXT_LEVEL
     mov cx, FALSE
-    jmp @@end
+    jmp @@Complete
 @@CheckKeyUp:
     cmp ax, KEY_UP
     jne @@CheckKeyLeft
@@ -527,7 +555,7 @@ PROC HandleKey
     jne @@WaitForKey
     set_state STATE_NEXT_LEVEL
     mov cx, FALSE
-    jmp @@end
+    jmp @@Complete
 @@CheckKeyLeft:
     cmp ax, KEY_LEFT
     jne @@CheckKeyRight
@@ -537,7 +565,7 @@ PROC HandleKey
     jne @@WaitForKey
     set_state STATE_NEXT_LEVEL
     mov cx, FALSE
-    jmp @@end
+    jmp @@Complete
 @@CheckKeyRight:
     cmp ax, KEY_RIGHT
     jne @@CheckKeyR
@@ -547,7 +575,7 @@ PROC HandleKey
     jne @@WaitForKey
     set_state STATE_NEXT_LEVEL
     mov cx, FALSE
-    jmp @@end
+    jmp @@Complete
 @@CheckKeyR:
     cmp ax, KEY_R
     jne @@CheckKeyEsc
@@ -562,8 +590,11 @@ PROC HandleKey
     jmp @@end
 jmp @@WaitForKey
 
+@@Complete:
+    call LevelComplete
 
 @@end:
+    
     mov ax, cx
     pop cx
     mov sp,bp
@@ -598,7 +629,7 @@ PROC HandleArrow
     call GetArrayValueDir
     ; ax = value in distance 1
 
-@@IsDown:   ;player movement check              ; TODO
+@@IsDown:   ;player movement check              
     cmp ax, OBJ_FLOOR
     jne @@CheckTarget
     push Direction
@@ -764,6 +795,15 @@ PROC MoveToTarget
     Dir                      equ        [word bp+6]
     IsPushBox                equ        [word bp+4]
    ;}
+
+    ;print move count
+    push MOVE_X
+    push MOVE_Y
+    call SetCursorPosition
+    add [_numMoves], 1
+    mov ax, [_numMoves]
+    call PrintDecimal
+;--------------------------
     ; int
     mov TargObj2, 0
 
@@ -1259,3 +1299,93 @@ PROC ObjectToImage
     pop bp
     ret 2
 ENDP ObjectToImage
+;------------------------------------------------------------------------
+; prints bmp to screen (next level / game end)  
+; 
+; Input:
+;     call LevelComplete 
+; 
+; Affected Registers: none 
+;------------------------------------------------------------------------
+PROC LevelComplete
+    push bp
+    mov bp,sp
+    pusha
+ 
+    cmp [_currentLevel], MAX_LEVELS
+    je @@EndPic
+
+    mov si, offset _imageComplete
+    Display_BMP si, MSG_X, MSG_Y
+    jmp @@end
+
+@@EndPic:
+    mov si, offset _imageEndGame
+    Display_BMP si, 0, 0
+ 
+@@end:
+    call WaitForKeypress
+    popa
+    mov sp,bp
+    pop bp
+    ret 
+ENDP LevelComplete
+;------------------------------------------------------------------------
+; Description: 
+; 
+; Input:
+;     push  X1 
+;     push  X2
+;     call PrintCounters
+; 
+; Output: 
+;     AX - 
+; 
+; Affected Registers: 
+; Limitations: 
+;------------------------------------------------------------------------
+PROC PrintCounters
+    push bp
+    mov bp,sp
+    pusha
+
+@@Level:
+    push LEVEL_COLOR
+    push offset _stringLevel
+    push LEVEL_X
+    push LEVEL_Y
+    call PrintStrVGA
+
+    mov ax, [_currentLevel]
+    call PrintDecimal
+
+    mov ax, '/'
+    push ax
+    call PrintChar
+
+    mov ax, MAX_LEVELS
+    call PrintDecimal
+
+
+@@Moves:
+    push LEVEL_COLOR
+    push offset _stringMoves
+    push LEVEL_X + 15
+    push LEVEL_Y
+    call PrintStrVGA
+
+    
+    push MOVE_X
+    push MOVE_Y
+    call SetCursorPosition
+    mov ax, [_numMoves]
+    call PrintDecimal
+
+@@Time:
+
+@@end:
+    popa
+    mov sp,bp
+    pop bp
+    ret 
+ENDP PrintCounters
