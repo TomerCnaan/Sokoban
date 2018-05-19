@@ -68,7 +68,7 @@ MOVE_X                       = 22
 MOVE_Y                       = 24
 
 ;message
-MSG_X                       = 115
+MSG_X                       = 95
 MSG_Y                       = 63
 
 DATASEG
