@@ -4,10 +4,13 @@
 ;===================================================================================================
 LOCALS @@
 
-DATASEG
- _imageWelcome     Bitmap       {ImagePath="images\\sokoban.bmp"}
+INTRO_MUSIC_LEN         =   13
 
-CODESEG
+DATASEG
+     _imageWelcome             Bitmap       {ImagePath="images\\sokoban.bmp"}
+     _introMusic               dw          293,3,293,3,277,3,277,3,261,3,261,3,277,3,293,6,293,3,277,6,261,6,277,3,293,3
+
+    CODESEG
 ;------------------------------------------------------------------------
 ; Description: Hendles welcome screen
 ; 
@@ -26,6 +29,11 @@ PROC HandleWelcome
 
     mov si, offset _imageWelcome
     Display_BMP si, 0 , 0
+
+    push offset _introMusic
+    push INTRO_MUSIC_LEN
+    call Play
+
 @@CheckKey:
     call WaitForKeypress
     cmp ax, KEY_ESC
