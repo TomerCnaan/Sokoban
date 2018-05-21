@@ -55,7 +55,7 @@ DIR_LEFT                    = 3
 DIR_RIGHT                   = 4
 DIR_INVALID                 = 10
 
-MAX_LEVELS                  = 3
+MAX_LEVELS                  = 1
 LEVEL_FILE_OFFSET           = 8
 
 ; Level string
@@ -70,6 +70,11 @@ MOVE_Y                       = 24
 ;message
 MSG_X                       = 95
 MSG_Y                       = 63
+
+; Music
+LEVEL_MUSIC_LEN         =   5
+GAMEOVER_MUSIC_LEN      =   10
+HIT_MUSIC_LEN           =   2
 
 DATASEG
     ; Bitmaps
@@ -105,9 +110,11 @@ DATASEG
     _errLoadLevel    db          "Error loading level file","$"
     _stringLevel     db          "Level: ",NULL
     _stringMoves     db          "Moves:",NULL
-
-    
-    
+   
+    ; Music
+    _levelCompleteMusic       dw          300,2,400,2,500,2,400,2,300,2
+    _gameOverMusic            dw          300,2,400,2,500,2,400,2,300,2,300,2,400,2,500,2,400,2,300,2
+    _hitOverMusic             dw          400,1,200,1
     
 CODESEG
 
@@ -646,7 +653,7 @@ PROC HandleArrow
 @@CheckWall:
     cmp ax, OBJ_WALL
     jne @@CheckBox
-    jmp @@end
+    jmp @@cannotmove
 @@CheckBox:
     cmp ax, OBJ_BOX
     je @@CheckNextObj
@@ -674,15 +681,19 @@ PROC HandleArrow
 @@CheckWallAfterBox:
     cmp ax, OBJ_WALL
     jne @@CheckBoxAfterBox
-    jmp @@end
+    jmp @@cannotmove
 @@CheckBoxAfterBox:
     cmp ax, OBJ_BOX
     jne @@CheckBoxOnTargetAfterBox
-    jmp @@end
+    jmp @@cannotmove
 @@CheckBoxOnTargetAfterBox:
     cmp ax, OBJ_BOX_ON_TARGET
-    jmp @@end
+    jmp @@cannotmove
 
+@@cannotmove:
+    push offset _hitOverMusic
+    push HIT_MUSIC_LEN
+    call Play
 
 @@end:
     popa
@@ -1317,11 +1328,21 @@ PROC LevelComplete
 
     mov si, offset _imageComplete
     Display_BMP si, MSG_X, MSG_Y
+
+    push offset _levelCompleteMusic
+    push LEVEL_MUSIC_LEN
+    call Play
+    
     jmp @@end
 
 @@EndPic:
     mov si, offset _imageEndGame
     Display_BMP si, 0, 0
+
+    push offset _gameOverMusic
+    push GAMEOVER_MUSIC_LEN
+    call Play
+
     set_state STATE_EXIT
  
 @@end:

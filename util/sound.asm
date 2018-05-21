@@ -25,7 +25,55 @@ MACRO stop_beep
 ENDM
 
 ;=+=+=+=+=+=+=+=+=+=+=+=+=+= IMPLEMENTATION +=+=+=+=+=+=+=+=+=+=+=+=+=+=+
+;------------------------------------------------------------------------
+; Play: plays an array of notes
+; The WORD array is built as follows:
+; [0] = freq  [1] = duration in ticks [2] = freq ...
+; 
+; Input:
+;     push offset of a sound array
+;     push number of cells in array
+;     call Play
+; 
+; Output: None
+;------------------------------------------------------------------------
+PROC Play
+    push bp
+    mov bp,sp
+    pusha
+ 
+    ; now the stack is
+    ; bp+0 => old base pointer
+    ; bp+2 => return address
+    ; bp+4 => number of cells in array
+    ; bp+6 => array offset
+    ; saved registers
+ 
+    ;{
+    data        equ        [word bp+6]
+    leng        equ        [word bp+4]
+    ;}
 
+    mov si, data
+    mov di, 0
+
+@@play:    
+    push [WORD si]
+    call Beep
+    push [WORD si+2]
+    call Delay
+    call StopBeep
+    inc di
+    add si,4
+    cmp di, leng
+    jb @@play
+
+@@end:
+    popa
+    mov sp,bp
+    pop bp
+    ret 4
+ENDP Play
 ;----------------------------------------------------------------------
 ; Plays a beep sound based on the given frequency
 ; Credit: http://www.edaboard.com/thread182595.html
