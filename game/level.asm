@@ -1322,6 +1322,7 @@ PROC LevelComplete
 @@EndPic:
     mov si, offset _imageEndGame
     Display_BMP si, 0, 0
+    set_state STATE_EXIT
  
 @@end:
     call WaitForKeypress

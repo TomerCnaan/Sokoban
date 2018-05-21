@@ -27,6 +27,17 @@ BMP_PALETTE_SIZE_OFFSET  = BMP_LOADED_OFFSET + 2
 BMP_SKIP_SIZE			 = BMP_HEADER_SIZE + BMP_PALETTE_SIZE
 
 DATASEG
+	; The Bitmap struct
+	struc Bitmap
+			FileHandle	dw 0
+			Header 	    db BMP_HEADER_SIZE dup(0)
+			Palette 	db BMP_PALETTE_SIZE dup (0)
+			Width		dw 0
+			Height		dw 0
+			ImagePath   db BMP_PATH_LENGTH+1 dup(0)
+			Loaded		dw 0
+			PaletteSize dw 0
+	ENDS Bitmap
 	; Used to read a single line from the file
     _bmpSingleLine 			db BMP_MAX_WIDTH dup (0)  
 	; Draw palette only ones
@@ -566,3 +577,4 @@ PROC GetBmpHeight
     pop bp
 	ret 2
 ENDP GetBmpHeight
+
