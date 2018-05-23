@@ -214,7 +214,7 @@ ENDM
 ; Description: handles levels
 ;  
 ; Input:
-;     call HandleLevel
+;    call HandleLevel
 ;------------------------------------------------------------------------
 PROC HandleLevel
     push bp
