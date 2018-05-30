@@ -7,7 +7,7 @@ LOCALS @@
 
 CODESEG
 ;----------------------------------------------------------
-; Prints a char to the screen
+; PrintChar: Prints a char to the screen
 ; Input: 
 ;   push char
 ;   call PrintChar
@@ -27,36 +27,7 @@ PROC PrintChar
     ret 2
 ENDP PrintChar
 ;----------------------------------------------------------
-; Prints a char to the screen + New line
-;----------------------------------------------------------
-MACRO PrintCharNewLine char
-    push char
-    call PrintChar
-    call PrintNewLine
-ENDM
-;----------------------------------------------------------
-; Prints a new line char to the screen
-;----------------------------------------------------------
-PROC PrintNewLine
-    push dx
-    mov dx, 0Ah
-    call PrintChar
-    pop dx
-    ret
-ENDP PrintNewLine
-;----------------------------------------------------------
-; Prints a space char to the screen
-;----------------------------------------------------------
-PROC PrintSpace
-    push dx
-    xor dx, dx
-    mov dl, ' '
-    call PrintChar
-    pop dx
-    ret
-ENDP PrintSpace
-;----------------------------------------------------------
-; Prints a string to the screen
+; PrintStr: Prints a string to the screen
 ; Input: 
 ;   push offset string ending in "$"
 ;   call PrintSre
@@ -75,17 +46,6 @@ PROC PrintStr
     pop bp
     ret 2
 ENDP PrintStr
-;----------------------------------------------------------
-; Prints a string to the screen + New line
-; Input:
-;   push offset string ending in "$"
-;   call PrintStrNewLine
-;----------------------------------------------------------
-MACRO PrintStrNewLine ostr
-    push ostr
-    call PrintStr
-    call PrintNewLine
-ENDM
 ;------------------------------------------------------------------------
 ; strlen: Calculates length of string ending with NULL
 ; 
@@ -134,24 +94,7 @@ PROC Strlen
     ret 2
 ENDP Strlen
 ;----------------------------------------------------------
-; Prints a character on VGA display
-; DL: char
-; BL, color
-;----------------------------------------------------------
-PROC PrintCharVGA
-    push ax
-    push bx
-    mov ah, 0Eh
-    mov al, dl
-    mov bh, 0
-    ;mov bl, [gr_pen_color]
-    int 10h
-    pop bx
-    pop ax
-    ret
-ENDP PrintCharVGA
-;----------------------------------------------------------
-; Prints a string to the VGA screen
+; PrintStrVGA: Prints a string to the VGA screen
 ;
 ; push color
 ; push offset string
@@ -205,7 +148,7 @@ PROC PrintStrVGA
     ret 8
 ENDP PrintStrVGA
 ;----------------------------------------------------------
-; Set cursor position
+; SetCursorPosition: Set cursor position
 ;
 ; push x
 ; push y
@@ -235,7 +178,7 @@ PROC SetCursorPosition
     ret 4
 ENDP SetCursorPosition
 ;================================================
-; Description - Write on screen the value of ax (decimal)
+; PrintDecimal - Write on screen the value of ax (decimal)
 ;               the practice :  
 ;				Divide AX by 10 and put the Mod on stack 
 ;               Repeat Until AX smaller than 10 then print AX (MSB) 

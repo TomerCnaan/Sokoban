@@ -75,7 +75,7 @@ PROC Play
     ret 4
 ENDP Play
 ;----------------------------------------------------------------------
-; Plays a beep sound based on the given frequency
+; Beep: Plays a beep sound based on the given frequency
 ; Credit: http://www.edaboard.com/thread182595.html
 ;
 ; push FREQUENCY IN HERTZ
@@ -121,7 +121,7 @@ PROC Beep
 ENDP Beep    
 
 ;----------------------------------------------------------------------
-; Stop beep by destroying AL
+; StopBeep: Stop beep by destroying AL
 ;----------------------------------------------------------------------
 PROC StopBeep
     push ax

@@ -126,7 +126,7 @@ MACRO bmp_fseek
 	int 21h
 ENDM
 ;------------------------------------------------------------------------
-; Reads a BMP image from disk and displays it on the screen
+; BmpDisplay: Reads a BMP image from disk and displays it on the screen
 ; You can use the 'DisplayBmp' macro to make it easier to call this
 ; proc
 ;

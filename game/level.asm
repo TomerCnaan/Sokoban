@@ -211,7 +211,7 @@ MACRO get_arr_value row,col
 ENDM
 
 ;------------------------------------------------------------------------
-; Description: handles levels
+; HandleLevel: handles levels
 ;  
 ; Input:
 ;    call HandleLevel
@@ -259,7 +259,7 @@ PROC HandleLevel
     ret 
 ENDP HandleLevel
 ;------------------------------------------------------------------------
-; ReadLevelFile: 
+; ReadLevelFile: reads the level file
 ; 
 ; Input:
 ;     push offset path 
@@ -421,8 +421,8 @@ PROC ParseLevelData
 ENDP ParseLevelData
 
 ;------------------------------------------------------------------------
-; parses screen array and presents bmp pictures on the screen 
-; 
+; PrintLevelToScreen: parses screen array and presents bmp pictures on 
+;                     the screen 
 ; Input:
 ;     push offset sfreenArray
 ;     call PrintLevelToScreen
@@ -526,7 +526,7 @@ PROC PrintLevelToScreen
 ENDP PrintLevelToScreen
 
 ;------------------------------------------------------------------------
-; ProcName: HandleKey
+; HandleKey: handles key press
 ; 
 ; Input:
 ;     call HandleKey
@@ -609,7 +609,7 @@ jmp @@WaitForKey
     ret 
 ENDP HandleKey
 ;------------------------------------------------------------------------
-; Description: handles arrow press
+; HandleArrow: handles arrow press
 ; 
 ; Input:
 ;     push  Diraction
@@ -702,8 +702,8 @@ PROC HandleArrow
     ret 2
 ENDP HandleArrow
 ;------------------------------------------------------------------------
-; Description: 
-; 
+; GetArrayValueDir: finds value in array based on the player position, 
+;                   direction and distance.
 ; Input:
 ;     push  direction
 ;     push  distance
@@ -759,7 +759,7 @@ PROC GetArrayValueDir
     ret 4
 ENDP GetArrayValueDir
 ;------------------------------------------------------------------------
-; Description: 
+; MoveToTarget: sets all the paramters needed for the animation
 ; 
 ; Input:
 ;     push diraction
@@ -767,10 +767,8 @@ ENDP GetArrayValueDir
 ;     call MoveToTarget
 ; 
 ; Output: 
-;     AX - 
-; 
-; Affected Registers: 
-; Limitations: 
+;     none 
+; Affected Registers: none
 ;------------------------------------------------------------------------
 PROC MoveToTarget
     push bp
@@ -900,7 +898,7 @@ PROC MoveToTarget
 ENDP MoveToTarget
 
 ;------------------------------------------------------------------------
-; Description: 
+; Animate: permoforming the animate on the screen
 ; 
 ; Input:
 ;     push  x coor of the player 
@@ -914,6 +912,9 @@ ENDP MoveToTarget
 ;     push  x coor of the box/box on target
 ;     push  y coor of the box/box on target
 ;     call Animate
+; 
+; output:
+;     none
 ;------------------------------------------------------------------------
 PROC Animate
     push bp
@@ -1048,18 +1049,22 @@ PROC Animate
     ret 20
 ENDP Animate
 ;------------------------------------------------------------------------
-; Description:     
+; UpdateArray: uptades array values to the correct values after a movement   
 ; 
 ; Input:
-;     push  X1 
-;     push  X2
+;      
+;     push GapX
+;     push GapY
+;     push FromObj
+;     push TargObj
+;     push TargObj2
+;     push IsPushBox
 ;     call UpdateArray
 ; 
 ; Output: 
-;     AX - 
+;     none 
 ; 
-; Affected Registers: 
-; Limitations: 
+; Affected Registers: none
 ;------------------------------------------------------------------------
 PROC UpdateArray
     push bp
@@ -1250,7 +1255,7 @@ PROC UpdateArray
     ret 12
 ENDP UpdateArray
 ;------------------------------------------------------------------------
-; Description: 
+; ObjectToImage: sets the image offset of the given object
 ; 
 ; Input:
 ;     push  obj
@@ -1259,8 +1264,7 @@ ENDP UpdateArray
 ; Output: 
 ;     AX - offset to image
 ; 
-; Affected Registers: 
-; Limitations: 
+; Affected Registers: ax
 ;------------------------------------------------------------------------
 PROC ObjectToImage
     push bp
@@ -1311,7 +1315,7 @@ PROC ObjectToImage
     ret 2
 ENDP ObjectToImage
 ;------------------------------------------------------------------------
-; prints bmp to screen (next level / game end)  
+; LevelComplete: prints bmp to screen (next level / game end)  
 ; 
 ; Input:
 ;     call LevelComplete 
@@ -1353,18 +1357,12 @@ PROC LevelComplete
     ret 
 ENDP LevelComplete
 ;------------------------------------------------------------------------
-; Description: 
+; PrintCounters: prints move count and level count to screen in VGA mode
 ; 
 ; Input:
 ;     push  X1 
 ;     push  X2
 ;     call PrintCounters
-; 
-; Output: 
-;     AX - 
-; 
-; Affected Registers: 
-; Limitations: 
 ;------------------------------------------------------------------------
 PROC PrintCounters
     push bp

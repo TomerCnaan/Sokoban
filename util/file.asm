@@ -15,7 +15,7 @@ CODESEG
     _fErr    	db      0		; DOS error code
 
 ;------------------------------------------------------------------
-; Open a file
+; fopen: Open a file
 ;
 ; push address of file name
 ; push segment of file name
@@ -54,7 +54,7 @@ PROC fopen
 	ret 4
 ENDP fopen
 ;------------------------------------------------------------------
-; Close a file
+; fclose: Close a file
 ;
 ; call Fclose
 ;
@@ -81,7 +81,7 @@ PROC fclose
 	ret
 ENDP fclose
 ;------------------------------------------------------------------
-; Reads from a file
+; fread: Reads from a file
 ;
 ; push length
 ; push address of buffer
@@ -129,7 +129,7 @@ PROC fread
 ENDP fread
 
 ;------------------------------------------------------------------------
-; Gets the size of a file
+; fsize: Gets the size of a file
 ; 
 ; Input:
 ;     push file path address 

@@ -19,9 +19,9 @@ KEY_LEFT = 4B00h
 
 CODESEG
 ;------------------------------------------------------------------
-; Checks for a keypress; Sets ZF if no keypress is available
-; Otherwise returns it's scan code into AH and it's ASCII into al
-; Removes the charecter from the Type Ahead Buffer 
+; WaitForKeypress: Checks for a keypress; Sets ZF if no keypress 
+; is available Otherwise returns it's scan code into AH and it's 
+; ASCII into al Removes the charecter from the Type Ahead Buffer 
 ; return: AX  = _Key
 ;------------------------------------------------------------------
 PROC WaitForKeypress
@@ -45,7 +45,7 @@ PROC WaitForKeypress
     ret
 ENDP WaitForKeypress
 ;------------------------------------------------------------------------
-; SetKeyboardRate: 
+; SetKeyboardRate: sets the keyboard rate
 ; 
 ; Input:
 ;     call SetKeyboardRate

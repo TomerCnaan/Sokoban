@@ -9,7 +9,7 @@ DATASEG
 
 CODESEG
 ;------------------------------------------------------------------------
-; Description: Hendles welcome screen
+; HandleInstructions: Hendles welcome screen
 ; 
 ; Input:
 ;     call HandleInstructions
