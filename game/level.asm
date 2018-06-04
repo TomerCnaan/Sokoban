@@ -25,8 +25,6 @@ LVL_FILE_SIZE               = LVL_FILE_LINE_LEN*LVL_FILE_NUM_LINES
 ; Animation
 ANIM_GAP                    = 1
 ANIM_GAP_NEG                = -1*ANIM_GAP
-ANIM_DELAY_MS               = 10
-ANIM_STEPS                  = SCRN_BOX_WIDTH / ANIM_GAP
 
 ; Game objects
 OBJ_FLOOR                   = 0     
