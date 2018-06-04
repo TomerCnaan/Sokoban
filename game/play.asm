@@ -15,7 +15,7 @@ STATE_EXIT          = 10
 DATASEG
     ; Game state
     _gameState           dw           0
-    _currentLevel        dw           1
+    _currentLevel        dw           5
 
 CODESEG
 ;------------------------------------------------------------------------

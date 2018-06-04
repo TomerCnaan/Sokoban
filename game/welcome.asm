@@ -30,9 +30,9 @@ PROC HandleWelcome
     mov si, offset _imageWelcome
     Display_BMP si, 0 , 0
 
-    push offset _introMusic
-    push INTRO_MUSIC_LEN
-    call Play
+    ;push offset _introMusic
+    ;push INTRO_MUSIC_LEN
+    ;call Play
 
 @@CheckKey:
     call WaitForKeypress

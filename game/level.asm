@@ -55,7 +55,7 @@ DIR_LEFT                    = 3
 DIR_RIGHT                   = 4
 DIR_INVALID                 = 10
 
-MAX_LEVELS                  = 1
+MAX_LEVELS                  = 5 
 LEVEL_FILE_OFFSET           = 8
 
 ; Level string
